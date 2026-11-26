@@ -46,7 +46,7 @@ pci-ids = "0.2"
 # Stress testing
 rayon = "1.10"
 glam = "0.24"
-criterion = "0.5"
+criterion = "0.8"
 
 # LLM Bench
 llama-cpp-2 = "0.1"
