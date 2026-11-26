@@ -1,13 +1,15 @@
 //! Stress test runner
 
-use crate::{StressTestConfig, StressTestResults, StressError, Result, ThermalMonitor, ThermalReading};
+use crate::{
+    Result, StressError, StressTestConfig, StressTestResults, ThermalMonitor, ThermalReading,
+};
+use chrono::{DateTime, Utc};
 use hw_stress::cpu::CpuStress;
-use hw_stress::memory::MemoryStress;
 use hw_stress::disk::DiskStress;
 use hw_stress::gpu::GpuStress;
+use hw_stress::memory::MemoryStress;
 use std::time::Duration;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 pub struct StressRunner {
     config: StressTestConfig,
@@ -17,7 +19,9 @@ pub struct StressRunner {
 
 impl StressRunner {
     pub fn new(config: StressTestConfig) -> Self {
-        let thermal_monitor = config.thermal_limit_celsius.map(|limit| ThermalMonitor::new(Some(limit)));
+        let thermal_monitor = config
+            .thermal_limit_celsius
+            .map(|limit| ThermalMonitor::new(Some(limit)));
         Self {
             config,
             thermal_monitor,
@@ -99,7 +103,8 @@ impl StressRunner {
             Vec::new()
         };
 
-        let passed = errors.is_empty() && self.check_results(&cpu_result, &memory_result, &disk_result, &gpu_result);
+        let passed = errors.is_empty()
+            && self.check_results(&cpu_result, &memory_result, &disk_result, &gpu_result);
 
         Ok(StressTestResults {
             id: Uuid::new_v4(),

@@ -1,27 +1,27 @@
 //! Hardware inventory crate
 //! Provides comprehensive hardware information gathering
 
+pub mod battery;
 pub mod cpu;
 pub mod gpu;
 pub mod memory;
-pub mod storage;
-pub mod battery;
-pub mod usb;
 pub mod pci;
+pub mod storage;
 pub mod system;
+pub mod usb;
 
+use chrono::{DateTime, Utc};
+use hw_inventory::battery::BatteryInfo;
 use hw_inventory::cpu::CpuInfo;
 use hw_inventory::gpu::GpuInfo;
 use hw_inventory::memory::MemoryInfo;
-use hw_inventory::storage::StorageInfo;
-use hw_inventory::battery::BatteryInfo;
-use hw_inventory::usb::UsbDevice;
 use hw_inventory::pci::PciDevice;
+use hw_inventory::storage::StorageInfo;
 use hw_inventory::system::SystemInfo;
+use hw_inventory::usb::UsbDevice;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Complete hardware inventory snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]

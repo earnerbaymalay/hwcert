@@ -9,7 +9,7 @@ description = "Hardware inventory: CPU, GPU, memory, storage, battery, USB, PCI"
 [dependencies]
 sysinfo = { workspace = true }
 nvml-wrapper = { workspace = true }
-smartctl = { workspace = true }
+# smartctl = { workspace = true }  # Removed - not available on crates.io
 usb-ids = { workspace = true }
 pci-ids = { workspace = true }
 serde = { workspace = true }

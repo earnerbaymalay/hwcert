@@ -1,21 +1,32 @@
 //! PDF certificate generation
 
 use crate::{CertError, Result};
-use printpdf::{PdfDocument, PdfPage, PdfLayer, Font, Mm, Pt, Color, Rgb, Line, Point, Matrix};
 use base64;
+use printpdf::{Color, Font, Line, Matrix, Mm, PdfDocument, PdfLayer, PdfPage, Point, Pt, Rgb};
 
 pub fn generate_certificate_pdf(payload: &serde_json::Value, qr_base64: &str) -> Result<Vec<u8>> {
-    let (doc, page1, layer1) = PdfDocument::new("HWCert Certificate", Mm(210.0), Mm(297.0), "Layer 1");
+    let (doc, page1, layer1) =
+        PdfDocument::new("HWCert Certificate", Mm(210.0), Mm(297.0), "Layer 1");
     let layer = doc.get_page(page1).get_layer(layer1);
 
     // Load font
-    let font = doc.add_builtin_font(Font::Helvetica).map_err(|e| CertError::PdfGen(e.to_string()))?;
-    let font_bold = doc.add_builtin_font(Font::HelveticaBold).map_err(|e| CertError::PdfGen(e.to_string()))?;
+    let font = doc
+        .add_builtin_font(Font::Helvetica)
+        .map_err(|e| CertError::PdfGen(e.to_string()))?;
+    let font_bold = doc
+        .add_builtin_font(Font::HelveticaBold)
+        .map_err(|e| CertError::PdfGen(e.to_string()))?;
 
     let mut y = Mm(270.0);
 
     // Title
-    layer.use_text("HWCert - Hardware Attestation Certificate", Pt(24.0), Mm(20.0), y, &font_bold);
+    layer.use_text(
+        "HWCert - Hardware Attestation Certificate",
+        Pt(24.0),
+        Mm(20.0),
+        y,
+        &font_bold,
+    );
     y -= Mm(15.0);
 
     // Separator
@@ -29,19 +40,37 @@ pub fn generate_certificate_pdf(payload: &serde_json::Value, qr_base64: &str) ->
 
     // Certificate ID
     if let Some(id) = payload.get("id") {
-        layer.use_text(&format!("Certificate ID: {}", id), Pt(10.0), Mm(20.0), y, &font);
+        layer.use_text(
+            &format!("Certificate ID: {}", id),
+            Pt(10.0),
+            Mm(20.0),
+            y,
+            &font,
+        );
         y -= Mm(8.0);
     }
 
     // Type
     if let Some(cert_type) = payload.get("type") {
-        layer.use_text(&format!("Type: {}", cert_type), Pt(10.0), Mm(20.0), y, &font);
+        layer.use_text(
+            &format!("Type: {}", cert_type),
+            Pt(10.0),
+            Mm(20.0),
+            y,
+            &font,
+        );
         y -= Mm(8.0);
     }
 
     // Subject
     if let Some(subject) = payload.get("subject") {
-        layer.use_text(&format!("Subject: {}", subject), Pt(10.0), Mm(20.0), y, &font);
+        layer.use_text(
+            &format!("Subject: {}", subject),
+            Pt(10.0),
+            Mm(20.0),
+            y,
+            &font,
+        );
         y -= Mm(8.0);
     }
 
@@ -51,7 +80,13 @@ pub fn generate_certificate_pdf(payload: &serde_json::Value, qr_base64: &str) ->
 
     // Issued at
     let now = chrono::Utc::now();
-    layer.use_text(&format!("Issued: {}", now.format("%Y-%m-%d %H:%M:%S UTC")), Pt(10.0), Mm(20.0), y, &font);
+    layer.use_text(
+        &format!("Issued: {}", now.format("%Y-%m-%d %H:%M:%S UTC")),
+        Pt(10.0),
+        Mm(20.0),
+        y,
+        &font,
+    );
     y -= Mm(8.0);
 
     // Payload data
@@ -75,9 +110,21 @@ pub fn generate_certificate_pdf(payload: &serde_json::Value, qr_base64: &str) ->
 
     // Footer
     y = Mm(20.0);
-    layer.use_text("Verify at: hwcert.example.com/verify", Pt(8.0), Mm(20.0), y, &font);
+    layer.use_text(
+        "Verify at: hwcert.example.com/verify",
+        Pt(8.0),
+        Mm(20.0),
+        y,
+        &font,
+    );
     y -= Mm(5.0);
-    layer.use_text("This certificate is digitally signed.", Pt(8.0), Mm(20.0), y, &font);
+    layer.use_text(
+        "This certificate is digitally signed.",
+        Pt(8.0),
+        Mm(20.0),
+        y,
+        &font,
+    );
 
     // Save to bytes
     doc.save_to(&mut Vec::new())

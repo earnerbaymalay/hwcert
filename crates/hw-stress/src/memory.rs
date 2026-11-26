@@ -1,10 +1,10 @@
 //! Memory stress testing
 
-use crate::{MemoryStressConfig, MemoryStressResult, MemoryPattern, StressError, Result};
+use crate::{MemoryPattern, MemoryStressConfig, MemoryStressResult, Result, StressError};
+use rand::Rng;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use rand::Rng;
 
 pub struct MemoryStress {
     config: MemoryStressConfig,
@@ -39,26 +39,64 @@ impl MemoryStress {
         // Run memory access pattern
         match pattern {
             MemoryPattern::Sequential => {
-                Self::sequential_access(buffer_ptr, size_bytes, stride, &ops_counter, &latency_sum, &latency_count, duration);
+                Self::sequential_access(
+                    buffer_ptr,
+                    size_bytes,
+                    stride,
+                    &ops_counter,
+                    &latency_sum,
+                    &latency_count,
+                    duration,
+                );
             }
             MemoryPattern::Random => {
-                Self::random_access(buffer_ptr, size_bytes, &ops_counter, &latency_sum, &latency_count, duration);
+                Self::random_access(
+                    buffer_ptr,
+                    size_bytes,
+                    &ops_counter,
+                    &latency_sum,
+                    &latency_count,
+                    duration,
+                );
             }
             MemoryPattern::Strided => {
-                Self::strided_access(buffer_ptr, size_bytes, stride, &ops_counter, &latency_sum, &latency_count, duration);
+                Self::strided_access(
+                    buffer_ptr,
+                    size_bytes,
+                    stride,
+                    &ops_counter,
+                    &latency_sum,
+                    &latency_count,
+                    duration,
+                );
             }
             MemoryPattern::WalkingOnes => {
-                Self::walking_ones(buffer_ptr, size_bytes, &ops_counter, &latency_sum, &latency_count, duration);
+                Self::walking_ones(
+                    buffer_ptr,
+                    size_bytes,
+                    &ops_counter,
+                    &latency_sum,
+                    &latency_count,
+                    duration,
+                );
             }
             MemoryPattern::WalkingZeros => {
-                Self::walking_zeros(buffer_ptr, size_bytes, &ops_counter, &latency_sum, &latency_count, duration);
+                Self::walking_zeros(
+                    buffer_ptr,
+                    size_bytes,
+                    &ops_counter,
+                    &latency_sum,
+                    &latency_count,
+                    duration,
+                );
             }
         }
 
         let total_ops = ops_counter.load(Ordering::Relaxed);
         let bandwidth_gbps = (total_ops as f64 * 8.0) / (duration_secs * 1_000_000_000.0);
         let latency_ns = if latency_count.load(Ordering::Relaxed) > 0 {
-            latency_sum.load(Ordering::Relaxed) as f64 / latency_count.load(Ordering::Relaxed) as f64
+            latency_sum.load(Ordering::Relaxed) as f64
+                / latency_count.load(Ordering::Relaxed) as f64
         } else {
             0.0
         };

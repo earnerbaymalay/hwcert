@@ -1,8 +1,8 @@
 //! USB device information gathering
 
-use crate::{UsbDevice, InventoryError, Result};
-use usb_ids::{Device, Class};
+use crate::{InventoryError, Result, UsbDevice};
 use serde::{Deserialize, Serialize};
+use usb_ids::{Class, Device};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +72,9 @@ fn lookup_usb_name(vid: u16, pid: u16) -> (String, String) {
     if let Some(device) = Device::from_vid_pid(vid, pid) {
         (device.name.to_string(), device.product_name.to_string())
     } else {
-        (format!("Unknown ({:04X})", vid), format!("Unknown ({:04X})", pid))
+        (
+            format!("Unknown ({:04X})", vid),
+            format!("Unknown ({:04X})", pid),
+        )
     }
 }

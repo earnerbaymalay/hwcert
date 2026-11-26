@@ -1,10 +1,13 @@
 //! Hardware certificate generation
 
-use crate::{Certificate, CertificateType, CertError, Result, KeyPair, sign_data, generate_qr_code, generate_certificate_pdf};
+use crate::{
+    generate_certificate_pdf, generate_qr_code, sign_data, CertError, Certificate, CertificateType,
+    KeyPair, Result,
+};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareCertificateData {

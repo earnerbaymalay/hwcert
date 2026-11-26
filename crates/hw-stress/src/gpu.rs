@@ -1,6 +1,6 @@
 //! GPU stress testing
 
-use crate::{GpuStressConfig, GpuStressResult, GpuWorkload, StressError, Result};
+use crate::{GpuStressConfig, GpuStressResult, GpuWorkload, Result, StressError};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -27,7 +27,9 @@ impl GpuStress {
         }
         #[cfg(not(feature = "gpu"))]
         {
-            Err(StressError::Config("GPU stress testing not enabled".to_string()))
+            Err(StressError::Config(
+                "GPU stress testing not enabled".to_string(),
+            ))
         }
     }
 

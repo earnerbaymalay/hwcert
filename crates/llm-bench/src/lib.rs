@@ -1,19 +1,19 @@
 //! LLM inference benchmarking crate
 //! Provides benchmarking for llama.cpp, candle, and ONNX Runtime
 
-pub mod llama_cpp;
 pub mod candle;
-pub mod onnx;
-pub mod tokenizer;
+pub mod llama_cpp;
 pub mod metrics;
+pub mod onnx;
 pub mod runner;
+pub mod tokenizer;
 
-use llm_bench::runner::{BenchRunner, BenchConfig, BenchResult};
-use llm_bench::metrics::{BenchMetrics, TokenMetrics, LatencyMetrics};
+use chrono::{DateTime, Utc};
+use llm_bench::metrics::{BenchMetrics, LatencyMetrics, TokenMetrics};
+use llm_bench::runner::{BenchConfig, BenchResult, BenchRunner};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Benchmark configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,8 +1,8 @@
 //! System information gathering
 
-use crate::{SystemInfo, InventoryError, Result};
-use sysinfo::{System, SystemExt};
+use crate::{InventoryError, Result, SystemInfo};
 use serde::{Deserialize, Serialize};
+use sysinfo::{System, SystemExt};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

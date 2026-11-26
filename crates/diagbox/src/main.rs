@@ -1,13 +1,13 @@
-use clap::{Parser, Subcommand};
-use hw_inventory::gather_inventory;
-use hw_stress::{run_stress_test, StressTestConfig, CpuStressConfig, CpuWorkload};
-use llm_bench::{run_benchmark, BenchConfig, Backend};
-use fw_check::gather_firmware_report;
 use cert_gen::{generate_hardware_attestation, KeyPair};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tracing::{info, error};
-use uuid::Uuid;
+use clap::{Parser, Subcommand};
+use fw_check::gather_firmware_report;
+use hw_inventory::gather_inventory;
+use hw_stress::{run_stress_test, CpuStressConfig, CpuWorkload, StressTestConfig};
+use llm_bench::{run_benchmark, Backend, BenchConfig};
 use std::path::PathBuf;
+use tracing::{error, info};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use uuid::Uuid;
 
 #[derive(Parser)]
 #[command(name = "diagbox")]
@@ -197,7 +197,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Inventory { format, output } => {
             info!("Gathering hardware inventory...");
             let inventory = gather_inventory().await?;
-            
+
             let output_str = match format.as_str() {
                 "json" => serde_json::to_string_pretty(&inventory)?,
                 "yaml" => serde_yaml::to_string(&inventory)?,
@@ -211,12 +211,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        Commands::Stress { duration, cpu_threads, memory_gb, disk_path, disk_gb, cooldown, thermal_limit, output } => {
+        Commands::Stress {
+            duration,
+            cpu_threads,
+            memory_gb,
+            disk_path,
+            disk_gb,
+            cooldown,
+            thermal_limit,
+            output,
+        } => {
             info!("Running stress tests...");
-            
+
             let config = StressTestConfig {
                 cpu: Some(CpuStressConfig {
-                    threads: if cpu_threads > 0 { cpu_threads } else { num_cpus::get() },
+                    threads: if cpu_threads > 0 {
+                        cpu_threads
+                    } else {
+                        num_cpus::get()
+                    },
                     workload: CpuWorkload::Mixed,
                     affinity: None,
                 }),
@@ -225,14 +238,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     pattern: hw_stress::MemoryPattern::Mixed,
                     stride: 64,
                 }),
-                disk: disk_path.zip(disk_gb).map(|(path, gb)| hw_stress::DiskStressConfig {
-                    path,
-                    size_gb: gb,
-                    pattern: hw_stress::DiskPattern::Mixed,
-                    block_size: 4096,
-                    threads: num_cpus::get(),
-                    fsync: true,
-                }),
+                disk: disk_path
+                    .zip(disk_gb)
+                    .map(|(path, gb)| hw_stress::DiskStressConfig {
+                        path,
+                        size_gb: gb,
+                        pattern: hw_stress::DiskPattern::Mixed,
+                        block_size: 4096,
+                        threads: num_cpus::get(),
+                        fsync: true,
+                    }),
                 gpu: None,
                 duration_secs: duration,
                 cooldown_secs: cooldown,
@@ -240,7 +255,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let result = run_stress_test(config).await?;
-            
+
             let output_str = serde_json::to_string_pretty(&result)?;
             if let Some(path) = output {
                 std::fs::write(path, output_str)?;
@@ -249,9 +264,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        Commands::Bench { model, backend, prompt, max_tokens, runs, temperature, gpu_layers, threads, output } => {
+        Commands::Bench {
+            model,
+            backend,
+            prompt,
+            max_tokens,
+            runs,
+            temperature,
+            gpu_layers,
+            threads,
+            output,
+        } => {
             info!("Running LLM benchmark...");
-            
+
             let backend = match backend.as_str() {
                 "llama.cpp" => Backend::LlamaCpp,
                 "candle" => Backend::Candle,
@@ -276,7 +301,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let result = run_benchmark(config).await?;
-            
+
             let output_str = serde_json::to_string_pretty(&result)?;
             if let Some(path) = output {
                 std::fs::write(path, output_str)?;
@@ -288,7 +313,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Firmware { output, check_db } => {
             info!("Checking firmware...");
             let report = gather_firmware_report().await?;
-            
+
             let output_str = serde_json::to_string_pretty(&report)?;
             if let Some(path) = output {
                 std::fs::write(path, output_str)?;
@@ -297,25 +322,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        Commands::Cert { cert_type, input, key, output, qr, pdf } => {
+        Commands::Cert {
+            cert_type,
+            input,
+            key,
+            output,
+            qr,
+            pdf,
+        } => {
             info!("Generating certificate...");
-            
+
             let input_data = std::fs::read_to_string(&input)?;
             let payload: serde_json::Value = serde_json::from_str(&input_data)?;
-            
+
             let key_data = std::fs::read(&key)?;
             let key_pair = KeyPair::from_pkcs8(&key_data)?;
-            
+
             let cert = match cert_type {
-                CertType::Hardware => cert_gen::generate_hardware_attestation(&payload, &key_pair).await?,
-                CertType::Firmware => cert_gen::generate_firmware_verification(&payload, &key_pair).await?,
-                CertType::StressTest => cert_gen::generate_stress_test_certificate(&payload, &key_pair).await?,
+                CertType::Hardware => {
+                    cert_gen::generate_hardware_attestation(&payload, &key_pair).await?
+                }
+                CertType::Firmware => {
+                    cert_gen::generate_firmware_verification(&payload, &key_pair).await?
+                }
+                CertType::StressTest => {
+                    cert_gen::generate_stress_test_certificate(&payload, &key_pair).await?
+                }
                 CertType::Benchmark => {
                     // Similar to stress test
                     cert_gen::generate_stress_test_certificate(&payload, &key_pair).await?
-                },
+                }
             };
-            
+
             let output_str = serde_json::to_string_pretty(&cert)?;
             if let Some(path) = output {
                 std::fs::write(path, output_str)?;
@@ -326,7 +364,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::GenKey { output, seed } => {
             info!("Generating Ed25519 key pair...");
-            
+
             let key_pair = if let Some(seed) = seed {
                 let mut seed_bytes = [0u8; 32];
                 let seed_hash = blake3::hash(seed.as_bytes());
@@ -338,22 +376,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let pkcs8 = key_pair.to_pkcs8();
             std::fs::write(&output, pkcs8)?;
-            
+
             println!("Key pair generated: {}", output.display());
             println!("Public key: {}", key_pair.verifying_key_bytes());
         }
 
         Commands::Verify { cert, pubkey } => {
             info!("Verifying certificate...");
-            
+
             let cert_data = std::fs::read_to_string(&cert)?;
             let cert: cert_gen::Certificate = serde_json::from_str(&cert_data)?;
-            
+
             let pubkey_data = std::fs::read_to_string(&pubkey)?;
             let pubkey_bytes = hex::decode(pubkey_data.trim())?;
-            
+
             let valid = cert_gen::verify_certificate(&cert, &hex::encode(pubkey_bytes))?;
-            
+
             if valid {
                 println!("✓ Certificate is valid");
             } else {

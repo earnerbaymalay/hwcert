@@ -1,6 +1,6 @@
 //! CPU stress testing
 
-use crate::{CpuStressConfig, CpuStressResult, CpuWorkload, StressError, Result};
+use crate::{CpuStressConfig, CpuStressResult, CpuWorkload, Result, StressError};
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -41,7 +41,9 @@ impl CpuStress {
 
         let start = Instant::now();
         for handle in handles {
-            handle.join().map_err(|_| StressError::Thread("Thread panicked".to_string()))?;
+            handle
+                .join()
+                .map_err(|_| StressError::Thread("Thread panicked".to_string()))?;
         }
         let duration_secs = start.elapsed().as_secs_f64();
 
@@ -58,7 +60,12 @@ impl CpuStress {
         })
     }
 
-    fn worker_loop(workload: CpuWorkload, ops_counter: Arc<AtomicU64>, errors: Arc<AtomicU64>, duration: Duration) {
+    fn worker_loop(
+        workload: CpuWorkload,
+        ops_counter: Arc<AtomicU64>,
+        errors: Arc<AtomicU64>,
+        duration: Duration,
+    ) {
         let start = Instant::now();
         while start.elapsed() < duration {
             match workload {

@@ -1,10 +1,10 @@
 //! Thermal monitoring
 
-use crate::{ThermalReading, StressError, Result};
+use crate::{Result, StressError, ThermalReading};
+use chrono::{DateTime, Utc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 pub struct ThermalMonitor {
@@ -24,7 +24,9 @@ impl ThermalMonitor {
 
     pub fn start(&self) -> Result<()> {
         if self.running.swap(true, Ordering::SeqCst) {
-            return Err(StressError::Hardware("Thermal monitor already running".to_string()));
+            return Err(StressError::Hardware(
+                "Thermal monitor already running".to_string(),
+            ));
         }
 
         let running = self.running.clone();

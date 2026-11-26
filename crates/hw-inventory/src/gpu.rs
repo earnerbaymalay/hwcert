@@ -51,14 +51,24 @@ fn gather_nvidia_gpus() -> Result<Vec<GpuInfo>> {
     {
         use nvml_wrapper::Nvml;
         let nvml = Nvml::init().map_err(|e| InventoryError::Nvml(e.to_string()))?;
-        let device_count = nvml.device_count().map_err(|e| InventoryError::Nvml(e.to_string()))?;
+        let device_count = nvml
+            .device_count()
+            .map_err(|e| InventoryError::Nvml(e.to_string()))?;
         let mut gpus = Vec::new();
 
         for i in 0..device_count {
-            let device = nvml.device_by_index(i).map_err(|e| InventoryError::Nvml(e.to_string()))?;
-            let name = device.name().map_err(|e| InventoryError::Nvml(e.to_string()))?;
-            let memory = device.memory_info().map_err(|e| InventoryError::Nvml(e.to_string()))?;
-            let temp = device.temperature(nvml_wrapper::enum_wrappers::device::TemperatureSensor::Gpu).ok();
+            let device = nvml
+                .device_by_index(i)
+                .map_err(|e| InventoryError::Nvml(e.to_string()))?;
+            let name = device
+                .name()
+                .map_err(|e| InventoryError::Nvml(e.to_string()))?;
+            let memory = device
+                .memory_info()
+                .map_err(|e| InventoryError::Nvml(e.to_string()))?;
+            let temp = device
+                .temperature(nvml_wrapper::enum_wrappers::device::TemperatureSensor::Gpu)
+                .ok();
             let utilization = device.utilization_rates().ok();
 
             gpus.push(GpuInfo {
@@ -71,8 +81,14 @@ fn gather_nvidia_gpus() -> Result<Vec<GpuInfo>> {
                 temperature: temp.map(|t| t as f32),
                 usage_percent: utilization.map(|u| u.gpu as f32).unwrap_or(0.0),
                 power_draw: device.power_usage().ok().map(|p| p as f32 / 1000.0),
-                clock_graphics: device.clock_info(nvml_wrapper::enum_wrappers::device::Clock::Graphics).ok().map(|c| c as u32),
-                clock_memory: device.clock_info(nvml_wrapper::enum_wrappers::device::Clock::Memory).ok().map(|c| c as u32),
+                clock_graphics: device
+                    .clock_info(nvml_wrapper::enum_wrappers::device::Clock::Graphics)
+                    .ok()
+                    .map(|c| c as u32),
+                clock_memory: device
+                    .clock_info(nvml_wrapper::enum_wrappers::device::Clock::Memory)
+                    .ok()
+                    .map(|c| c as u32),
                 compute_capability: None,
                 cuda_cores: None,
             });

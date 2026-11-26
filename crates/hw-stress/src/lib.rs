@@ -2,22 +2,22 @@
 //! Provides CPU, GPU, memory, and disk stress testing
 
 pub mod cpu;
-pub mod memory;
 pub mod disk;
 pub mod gpu;
-pub mod thermal;
+pub mod memory;
 pub mod runner;
+pub mod thermal;
 
+use chrono::{DateTime, Utc};
 use hw_stress::cpu::CpuStress;
-use hw_stress::memory::MemoryStress;
 use hw_stress::disk::DiskStress;
 use hw_stress::gpu::GpuStress;
+use hw_stress::memory::MemoryStress;
+use hw_stress::runner::{StressConfig, StressResult, StressRunner};
 use hw_stress::thermal::ThermalMonitor;
-use hw_stress::runner::{StressRunner, StressConfig, StressResult};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Stress test configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

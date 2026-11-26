@@ -1,32 +1,23 @@
 //! Firmware checking crate
-//! Provides UEFI, NVMe, SMBIOS, and fwupd metadata checking
+//! Provides SMBIOS metadata checking
 
-pub mod uefi;
-pub mod nvme_fw;
-pub mod smbios;
-pub mod fwupd;
 pub mod database;
+pub mod smbios;
 
-use fw_check::uefi::UefiInfo;
-use fw_check::nvme_fw::NvmeFirmware;
-use fw_check::smbios::SmbiosInfo;
-use fw_check::fwupd::FwupdInfo;
+use chrono::{DateTime, Utc};
 use fw_check::database::FirmwareDatabase;
+use fw_check::smbios::SmbiosInfo;
 use fw_check::FirmwareReport;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Complete firmware report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FirmwareReport {
     pub id: Uuid,
     pub timestamp: DateTime<Utc>,
-    pub uefi: UefiInfo,
-    pub nvme_devices: Vec<NvmeFirmware>,
     pub smbios: SmbiosInfo,
-    pub fwupd: Option<FwupdInfo>,
     pub database_check: DatabaseCheckResult,
 }
 
@@ -61,14 +52,8 @@ pub enum UpdateSeverity {
 /// Errors for firmware checking
 #[derive(Error, Debug)]
 pub enum FirmwareError {
-    #[error("UEFI error: {0}")]
-    Uefi(String),
-    #[error("NVMe error: {0}")]
-    Nvme(String),
     #[error("SMBIOS error: {0}")]
     Smbios(String),
-    #[error("fwupd error: {0}")]
-    Fwupd(String),
     #[error("Database error: {0}")]
     Database(String),
     #[error("IO error: {0}")]
@@ -81,19 +66,13 @@ pub type Result<T> = std::result::Result<T, FirmwareError>;
 
 /// Gather complete firmware information
 pub async fn gather_firmware_report() -> Result<FirmwareReport> {
-    let uefi = uefi::gather_uefi_info()?;
-    let nvme_devices = nvme_fw::gather_nvme_firmware()?;
     let smbios = smbios::gather_smbios_info()?;
-    let fwupd = fwupd::gather_fwupd_info().ok();
-    let database_check = database::check_firmware_database(&nvme_devices).await?;
+    let database_check = database::check_firmware_database().await?;
 
     Ok(FirmwareReport {
         id: Uuid::new_v4(),
         timestamp: Utc::now(),
-        uefi,
-        nvme_devices,
         smbios,
-        fwupd,
         database_check,
     })
 }

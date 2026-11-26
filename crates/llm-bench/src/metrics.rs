@@ -1,6 +1,6 @@
 //! Benchmark metrics
 
-use crate::{TokenMetrics, LatencyMetrics, MemoryUsage, GpuUsage};
+use crate::{GpuUsage, LatencyMetrics, MemoryUsage, TokenMetrics};
 use serde::{Deserialize, Serialize};
 
 impl TokenMetrics {

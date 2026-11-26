@@ -1,10 +1,13 @@
 //! llama.cpp backend for LLM benchmarking
 
-use crate::{BenchConfig, BenchResult, BenchError, Result, TokenMetrics, LatencyMetrics, MemoryUsage, GpuUsage};
-use llama_cpp_2::{ContextParams, ModelParams, LlamaModel, LlamaContext, SamplingParams};
+use crate::{
+    BenchConfig, BenchError, BenchResult, GpuUsage, LatencyMetrics, MemoryUsage, Result,
+    TokenMetrics,
+};
+use chrono::{DateTime, Utc};
+use llama_cpp_2::{ContextParams, LlamaContext, LlamaModel, ModelParams, SamplingParams};
 use std::time::{Duration, Instant};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 pub struct LlamaCppRunner {
     model: LlamaModel,
@@ -22,13 +25,18 @@ impl LlamaCppRunner {
         let model = LlamaModel::load_from_file(&config.model_path, model_params)
             .map_err(|e| BenchError::ModelLoad(e.to_string()))?;
 
-        let ctx_params = ContextParams::default()
-            .with_n_threads(config.threads.unwrap_or(4) as i32);
+        let ctx_params =
+            ContextParams::default().with_n_threads(config.threads.unwrap_or(4) as i32);
 
-        let context = model.new_context(&model, ctx_params)
+        let context = model
+            .new_context(&model, ctx_params)
             .map_err(|e| BenchError::ModelLoad(e.to_string()))?;
 
-        Ok(Self { model, context, config })
+        Ok(Self {
+            model,
+            context,
+            config,
+        })
     }
 
     pub async fn run_benchmark(&mut self) -> Result<BenchConfig> {
@@ -78,7 +86,9 @@ impl LlamaCppRunner {
 
     fn run_inference(&mut self) -> Result<(Vec<f64>, usize, usize, usize, f64)> {
         // Tokenize prompt
-        let tokens = self.model.tokenize(&self.config.prompt, true, false)
+        let tokens = self
+            .model
+            .tokenize(&self.config.prompt, true, false)
             .map_err(|e| BenchError::Inference(e.to_string()))?;
         let prompt_tokens = tokens.len();
 
@@ -94,7 +104,9 @@ impl LlamaCppRunner {
         let mut first_token_time = None;
 
         for _ in 0..self.config.max_tokens {
-            let token = self.context.sample_token(&sampling)
+            let token = self
+                .context
+                .sample_token(&sampling)
                 .map_err(|e| BenchError::Inference(e.to_string()))?;
 
             if first_token_time.is_none() {
@@ -110,12 +122,20 @@ impl LlamaCppRunner {
         }
 
         let total_time = start.elapsed().as_secs_f64();
-        let ttft = first_token_time.map(|t| t.as_secs_f64()).unwrap_or(total_time);
+        let ttft = first_token_time
+            .map(|t| t.as_secs_f64())
+            .unwrap_or(total_time);
         let generation_tokens = generated.len();
 
         // Calculate per-token latencies (simplified)
         let latencies = vec![total_time / generated.len() as f64; generated.len()];
 
-        Ok((latencies, generated.len(), prompt_tokens, generation_tokens, ttft))
+        Ok((
+            latencies,
+            generated.len(),
+            prompt_tokens,
+            generation_tokens,
+            ttft,
+        ))
     }
 }

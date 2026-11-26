@@ -1,8 +1,8 @@
 //! Battery information gathering
 
 use crate::{BatteryInfo, InventoryError, Result};
-use sysinfo::System;
 use serde::{Deserialize, Serialize};
+use sysinfo::System;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

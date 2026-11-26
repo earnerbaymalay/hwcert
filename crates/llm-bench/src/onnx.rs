@@ -1,11 +1,11 @@
 //! ONNX Runtime backend for LLM benchmarking
 
-use crate::{BenchConfig, BenchError, Result, TokenMetrics, LatencyMetrics, MemoryUsage, GpuUsage};
-use onnxruntime::{Environment, Session, SessionBuilder, TensorElementType};
-use tokenizers::Tokenizer;
-use std::time::{Duration, Instant};
-use uuid::Uuid;
+use crate::{BenchConfig, BenchError, GpuUsage, LatencyMetrics, MemoryUsage, Result, TokenMetrics};
 use chrono::{DateTime, Utc};
+use onnxruntime::{Environment, Session, SessionBuilder, TensorElementType};
+use std::time::{Duration, Instant};
+use tokenizers::Tokenizer;
+use uuid::Uuid;
 
 pub struct OnnxRunner {
     session: Session,
@@ -30,7 +30,11 @@ impl OnnxRunner {
         let tokenizer = Tokenizer::from_file(&config.model_path)
             .map_err(|e| BenchError::Tokenizer(e.to_string()))?;
 
-        Ok(Self { session, tokenizer, config })
+        Ok(Self {
+            session,
+            tokenizer,
+            config,
+        })
     }
 
     pub async fn run_benchmark(&mut self) -> Result<BenchConfig> {

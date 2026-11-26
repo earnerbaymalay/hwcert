@@ -1,8 +1,8 @@
 //! CPU information gathering
 
 use crate::{CpuInfo, InventoryError, Result};
-use sysinfo::{CpuRefreshKind, System, RefreshKind};
 use serde::{Deserialize, Serialize};
+use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,9 +25,8 @@ pub struct CpuInfo {
 }
 
 pub fn gather_cpu_info() -> Result<CpuInfo> {
-    let mut sys = System::new_with_specifics(
-        RefreshKind::new().with_cpu(CpuRefreshKind::everything())
-    );
+    let mut sys =
+        System::new_with_specifics(RefreshKind::new().with_cpu(CpuRefreshKind::everything()));
     sys.refresh_cpu_all();
 
     let cpus = sys.cpus();
@@ -37,7 +36,9 @@ pub fn gather_cpu_info() -> Result<CpuInfo> {
         id: Uuid::new_v4(),
         name: first_cpu.map(|c| c.name().to_string()).unwrap_or_default(),
         brand: first_cpu.map(|c| c.brand().to_string()).unwrap_or_default(),
-        vendor_id: first_cpu.map(|c| c.vendor_id().to_string()).unwrap_or_default(),
+        vendor_id: first_cpu
+            .map(|c| c.vendor_id().to_string())
+            .unwrap_or_default(),
         cores: sys.physical_core_count().unwrap_or(0),
         threads: cpus.len(),
         frequency_base: first_cpu.map(|c| c.frequency()).unwrap_or(0),
@@ -48,6 +49,8 @@ pub fn gather_cpu_info() -> Result<CpuInfo> {
         cache_l3: 0,
         temperature: None,
         usage_percent: cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len().max(1) as f32,
-        features: first_cpu.map(|c| c.cpu_features().iter().map(|s| s.to_string()).collect()).unwrap_or_default(),
+        features: first_cpu
+            .map(|c| c.cpu_features().iter().map(|s| s.to_string()).collect())
+            .unwrap_or_default(),
     })
 }

@@ -1,8 +1,8 @@
 //! Memory information gathering
 
-use crate::{MemoryInfo, InventoryError, Result};
-use sysinfo::System;
+use crate::{InventoryError, MemoryInfo, Result};
 use serde::{Deserialize, Serialize};
+use sysinfo::System;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,16 +33,20 @@ pub fn gather_memory_info() -> Result<MemoryInfo> {
     sys.refresh_memory();
     sys.refresh_components();
 
-    let modules = sys.memory_modules().iter().map(|m| MemoryModule {
-        id: Uuid::new_v4(),
-        size: m.size(),
-        speed: m.speed() as u32,
-        type_: m.memory_type().to_string(),
-        manufacturer: m.manufacturer().to_string(),
-        part_number: m.part_number().to_string(),
-        serial_number: m.serial_number().to_string(),
-        location: m.location().to_string(),
-    }).collect();
+    let modules = sys
+        .memory_modules()
+        .iter()
+        .map(|m| MemoryModule {
+            id: Uuid::new_v4(),
+            size: m.size(),
+            speed: m.speed() as u32,
+            type_: m.memory_type().to_string(),
+            manufacturer: m.manufacturer().to_string(),
+            part_number: m.part_number().to_string(),
+            serial_number: m.serial_number().to_string(),
+            location: m.location().to_string(),
+        })
+        .collect();
 
     Ok(MemoryInfo {
         id: Uuid::new_v4(),

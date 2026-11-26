@@ -1,11 +1,14 @@
 //! Benchmark runner
 
-use crate::{BenchConfig, BenchResult, BenchError, Result, TokenMetrics, LatencyMetrics, MemoryUsage, GpuUsage};
-use llama_cpp::LlamaCppRunner;
+use crate::{
+    BenchConfig, BenchError, BenchResult, GpuUsage, LatencyMetrics, MemoryUsage, Result,
+    TokenMetrics,
+};
 use candle::CandleRunner;
+use chrono::{DateTime, Utc};
+use llama_cpp::LlamaCppRunner;
 use onnx::OnnxRunner;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 pub struct BenchRunner {
     config: BenchConfig,
@@ -38,7 +41,13 @@ impl BenchRunner {
             timestamp: Utc::now(),
             config: self.config.clone(),
             token_metrics: TokenMetrics::new(),
-            latency_metrics: LatencyMetrics { avg_ms: 0.0, p50_ms: 0.0, p90_ms: 0.0, p99_ms: 0.0, max_ms: 0.0 },
+            latency_metrics: LatencyMetrics {
+                avg_ms: 0.0,
+                p50_ms: 0.0,
+                p90_ms: 0.0,
+                p99_ms: 0.0,
+                max_ms: 0.0,
+            },
             memory_usage: MemoryUsage::new(),
             gpu_usage: None,
             passed: true,

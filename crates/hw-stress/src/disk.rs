@@ -1,13 +1,13 @@
 //! Disk stress testing
 
-use crate::{DiskStressConfig, DiskStressResult, DiskPattern, StressError, Result};
+use crate::{DiskPattern, DiskStressConfig, DiskStressResult, Result, StressError};
+use rand::Rng;
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use std::path::Path;
-use rand::Rng;
 
 pub struct DiskStress {
     config: DiskStressConfig,
@@ -65,14 +65,28 @@ impl DiskStress {
                 let latency_count = latency_count.clone();
 
                 std::thread::spawn(move || {
-                    Self::worker_loop(test_file, pattern, block_size, fsync, read_bytes, write_bytes, read_ops, write_ops, latency_sum, latency_count, duration)
+                    Self::worker_loop(
+                        test_file,
+                        pattern,
+                        block_size,
+                        fsync,
+                        read_bytes,
+                        write_bytes,
+                        read_ops,
+                        write_ops,
+                        latency_sum,
+                        latency_count,
+                        duration,
+                    )
                 })
             })
             .collect();
 
         let start = Instant::now();
         for handle in handles {
-            handle.join().map_err(|_| StressError::Thread("Thread panicked".to_string()))?;
+            handle
+                .join()
+                .map_err(|_| StressError::Thread("Thread panicked".to_string()))?;
         }
         let duration_secs = start.elapsed().as_secs_f64();
 
@@ -90,7 +104,9 @@ impl DiskStress {
         let write_iops = total_write_ops as f64 / duration_secs;
 
         let latency_avg_ms = if latency_count.load(Ordering::Relaxed) > 0 {
-            latency_sum.load(Ordering::Relaxed) as f64 / latency_count.load(Ordering::Relaxed) as f64 / 1_000_000.0
+            latency_sum.load(Ordering::Relaxed) as f64
+                / latency_count.load(Ordering::Relaxed) as f64
+                / 1_000_000.0
         } else {
             0.0
         };
@@ -111,10 +127,7 @@ impl DiskStress {
     }
 
     fn create_test_file(path: &Path, size: u64) -> Result<()> {
-        let mut file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(path)?;
+        let mut file = OpenOptions::new().create(true).write(true).open(path)?;
         file.set_len(size)?;
         Ok(())
     }
@@ -147,7 +160,8 @@ impl DiskStress {
             let offset = match pattern {
                 DiskPattern::SequentialRead | DiskPattern::SequentialWrite => {
                     // Sequential - round robin
-                    let offset = rng.gen_range(0..file_size / block_size as u64) * block_size as u64;
+                    let offset =
+                        rng.gen_range(0..file_size / block_size as u64) * block_size as u64;
                     offset
                 }
                 DiskPattern::RandomRead | DiskPattern::RandomWrite | DiskPattern::Mixed => {

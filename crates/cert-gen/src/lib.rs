@@ -2,18 +2,18 @@
 //! Provides Ed25519 signing, QR codes, and PDF certificates
 
 pub mod ed25519_keys;
-pub mod qr_code;
-pub mod pdf_cert;
 pub mod hardware_cert;
+pub mod pdf_cert;
+pub mod qr_code;
 
-use cert_gen::ed25519_keys::{KeyPair, sign_data, verify_signature};
-use cert_gen::qr_code::generate_qr_code;
+use cert_gen::ed25519_keys::{sign_data, verify_signature, KeyPair};
+use cert_gen::hardware_cert::{generate_hardware_certificate, HardwareCertificate};
 use cert_gen::pdf_cert::generate_certificate_pdf;
-use cert_gen::hardware_cert::{HardwareCertificate, generate_hardware_certificate};
+use cert_gen::qr_code::generate_qr_code;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Certificate types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,10 +80,10 @@ pub async fn generate_firmware_verification(
         "data": firmware_report,
         "timestamp": chrono::Utc::now(),
     });
-    
+
     let signature = sign_data(key_pair, &serde_json::to_vec(&payload)?)?;
     let qr_code = generate_qr_code(&signature)?;
-    
+
     Ok(Certificate {
         id: Uuid::new_v4(),
         cert_type: CertificateType::FirmwareVerification,
@@ -109,11 +109,11 @@ pub async fn generate_stress_test_certificate(
         "data": stress_result,
         "timestamp": chrono::Utc::now(),
     });
-    
+
     let signature = sign_data(key_pair, &serde_json::to_vec(&payload)?)?;
     let qr_code = generate_qr_code(&signature)?;
     let pdf_data = generate_certificate_pdf(&payload, &qr_code)?;
-    
+
     Ok(Certificate {
         id: Uuid::new_v4(),
         cert_type: CertificateType::StressTestResult,
@@ -134,7 +134,7 @@ pub fn verify_certificate(cert: &Certificate, public_key: &str) -> Result<bool> 
     let payload_bytes = serde_json::to_vec(&cert.payload)?;
     let signature_bytes = hex::decode(&cert.signature)?;
     let pubkey_bytes = hex::decode(public_key)?;
-    
+
     verify_signature(&pubkey_bytes, &payload_bytes, &signature_bytes)
 }
 
