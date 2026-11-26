@@ -1,0 +1,34 @@
+[package]
+name = "hwcert-tauri"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = { workspace = true }
+description = "HWCert Tauri desktop application"
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+tauri = { workspace = true }
+tauri-plugin-dialog = { workspace = true }
+tauri-plugin-fs = { workspace = true }
+tauri-plugin-opener = { workspace = true }
+tauri-plugin-shell = { workspace = true }
+tauri-plugin-store = { workspace = true }
+tauri-plugin-clipboard = { workspace = true }
+tauri-plugin-notification = { workspace = true }
+hw-inventory = { path = "../hw-inventory" }
+hw-stress = { path = "../hw-stress" }
+llm-bench = { path = "../llm-bench" }
+fw-check = { path = "../fw-check" }
+cert-gen = { path = "../cert-gen" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+
+[features]
+default = []

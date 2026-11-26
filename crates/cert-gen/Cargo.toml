@@ -1,0 +1,23 @@
+[package]
+name = "cert-gen"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = { workspace = true }
+description = "Certificate generation: Ed25519 signing, QR codes, PDF certificates"
+
+[dependencies]
+ed25519-dalek = { workspace = true }
+qrcodegen = { workspace = true }
+printpdf = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+base64 = { workspace = true }
+uuid = { workspace = true }
+rand = { workspace = true }
+
+[features]
+default = []

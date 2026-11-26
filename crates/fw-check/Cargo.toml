@@ -1,0 +1,25 @@
+[package]
+name = "fw-check"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = { workspace = true }
+description = "Firmware checking: UEFI, NVMe, SMBIOS, fwupd metadata"
+
+[dependencies]
+uefi-rs = { workspace = true }
+nvme = { workspace = true }
+smbios = { workspace = true }
+fwupd = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+reqwest = { workspace = true }
+
+[features]
+default = []

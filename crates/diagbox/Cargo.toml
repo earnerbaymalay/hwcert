@@ -1,0 +1,27 @@
+[package]
+name = "diagbox"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = { workspace = true }
+description = "HWCert CLI: hardware diagnostics, stress testing, benchmarking, firmware check, cert generation"
+
+[[bin]]
+name = "diagbox"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+hw-inventory = { path = "../hw-inventory" }
+hw-stress = { path = "../hw-stress" }
+llm-bench = { path = "../llm-bench" }
+fw-check = { path = "../fw-check" }
+cert-gen = { path = "../cert-gen" }
+
+[features]
+default = []

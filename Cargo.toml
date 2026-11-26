@@ -1,0 +1,105 @@
+# HWCert - IT Tech's Offline Diagnostic Suite
+# Workspace for hardware diagnostics, stress testing, LLM benchmarking, firmware checking, and cert generation
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/hw-inventory",
+    "crates/hw-stress",
+    "crates/llm-bench",
+    "crates/fw-check",
+    "crates/cert-gen",
+    "crates/diagbox",
+    "crates/tauri-app",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[workspace.dependencies]
+# Core
+tokio = { version = "1", features = ["full", "tracing"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+
+# Config
+config = "0.14"
+figment = { version = "0.11", features = ["toml", "yaml", "json", "env"] }
+clap = { version = "4", features = ["derive", "env", "cargo", "help"] }
+
+# Hardware
+sysinfo = "0.30"
+nvml-wrapper = "0.6"
+smartctl = "0.2"
+usb-ids = "0.1"
+pci-ids = "0.1"
+
+# Stress testing
+rayon = "1.10"
+glam = "0.24"
+criteria = "0.5"
+
+# LLM Bench
+llama-cpp-2 = { version = "0.7", features = ["default"] }
+tokenizers = "0.19"
+candle-core = "0.8"
+candle-nn = "0.8"
+candle-transformers = "0.8"
+onnxruntime = "0.12"
+
+# Firmware
+uefi-rs = "0.2"
+nvme = "0.3"
+smbios = "0.2"
+fwupd = "0.1"
+
+# Cert Gen
+ed25519-dalek = "2"
+qrcodegen = "1.8"
+printpdf = "0.6"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Tauri
+tauri = { version = "2", features = ["macros"] }
+tauri-build = { version = "2" }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-store = "2"
+tauri-plugin-clipboard = "2"
+tauri-plugin-notification = "2"
+
+# Utilities
+uuid = { version = "1", features = ["v4", "v7", "serde", "fast-rng"] }
+rand = { version = "0.8", features = ["std"] }
+walkdir = "2"
+notify = { version = "6", features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"] }
+base64 = "0.22"
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.ci]
+inherits = "release"
+debug = false
+strip = true

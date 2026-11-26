@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "com.earnerbaymalay.hwcert",
+  "productName": "HWCert",
+  "version": "0.1.0",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "HWCert - Hardware Diagnostic Suite",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "decorations": true,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https: fonts.googleapis.com;"
+    }
+  },
+  "plugins": {
+    "dialog": {},
+    "fs": {},
+    "shell": { "open": true },
+    "store": {},
+    "opener": {},
+    "clipboard": {},
+    "notification": {}
+  },
+  "bundle": {
+    "icon": []
+  }
+}
