@@ -118,7 +118,7 @@ pub async fn generate_stress_test_certificate(
     let signature = sign_data(key_pair, &serde_json::to_vec(&payload)?)?;
     let signature_hex = hex::encode(signature.to_bytes());
     let qr_code = generate_qr_code(&signature_hex)?;
-    let pdf_data = generate_certificate_pdf(&payload, &qr_code)?;
+    let pdf_data = generate_certificate_pdf(&payload, &signature_hex)?;
 
     Ok(Certificate {
         id: Uuid::new_v4(),
