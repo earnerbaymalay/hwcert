@@ -1,8 +1,8 @@
 //! Benchmark runner
 
-use crate::{BenchConfig, BenchError, BenchResult, GpuUsage, LatencyMetrics, MemoryUsage, Result, TokenMetrics};
+use crate::{BenchConfig, BenchResult, LatencyMetrics, MemoryUsage, Result, TokenMetrics};
 use crate::candle::CandleRunner;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use uuid::Uuid;
 
 #[cfg(feature = "llama")]
@@ -21,7 +21,8 @@ impl BenchRunner {
     }
 
     pub async fn run(&mut self) -> Result<BenchResult> {
-        let result = match self.config.backend {
+        // Backend runners are still stubs: they load nothing and return the config.
+        match self.config.backend {
             #[cfg(feature = "llama")]
             crate::Backend::LlamaCpp => {
                 let mut runner = LlamaCppRunner::new(self.config.clone())?;
@@ -53,8 +54,9 @@ impl BenchRunner {
             },
             memory_usage: MemoryUsage::new(),
             gpu_usage: None,
-            passed: true,
-            errors: Vec::new(),
+            // No metrics are measured yet, so never report a pass.
+            passed: false,
+            errors: vec!["backend inference not implemented yet; metrics are placeholders".to_string()],
         })
     }
 }

@@ -1,25 +1,21 @@
 //! GPU stress testing
 
-use crate::{GpuStressConfig, GpuStressResult, GpuWorkload, Result, StressError};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
+use crate::{GpuStressConfig, GpuStressResult, Result};
+#[cfg(not(feature = "gpu"))]
+use crate::StressError;
+use std::time::Duration;
 
 pub struct GpuStress {
+    #[allow(dead_code)] // read once a real CUDA/OpenCL backend replaces the placeholder
     config: GpuStressConfig,
-    ops_counter: Arc<AtomicU64>,
-    errors: Arc<AtomicU64>,
 }
 
 impl GpuStress {
     pub fn new(config: GpuStressConfig) -> Self {
-        Self {
-            config,
-            ops_counter: Arc::new(AtomicU64::new(0)),
-            errors: Arc::new(AtomicU64::new(0)),
-        }
+        Self { config }
     }
 
+    #[cfg_attr(not(feature = "gpu"), allow(unused_variables))]
     pub fn run(&self, duration: Duration) -> Result<GpuStressResult> {
         #[cfg(feature = "gpu")]
         {
@@ -37,7 +33,7 @@ impl GpuStress {
     fn run_gpu_stress(&self, duration: Duration) -> Result<GpuStressResult> {
         // This would use CUDA/OpenCL/Metal APIs
         // For now, return a mock result
-        let start = Instant::now();
+        let start = std::time::Instant::now();
         std::thread::sleep(duration);
         let duration_secs = start.elapsed().as_secs_f64();
 

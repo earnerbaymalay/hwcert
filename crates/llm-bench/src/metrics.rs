@@ -1,7 +1,6 @@
 //! Benchmark metrics
 
 use crate::{GpuUsage, LatencyMetrics, MemoryUsage, TokenMetrics};
-use serde::{Deserialize, Serialize};
 
 impl TokenMetrics {
     pub fn new() -> Self {

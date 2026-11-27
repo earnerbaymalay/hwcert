@@ -1,6 +1,6 @@
 //! CPU information gathering
 
-use crate::{InventoryError, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use uuid::Uuid;

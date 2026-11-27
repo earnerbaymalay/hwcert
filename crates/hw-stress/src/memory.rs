@@ -1,6 +1,6 @@
 //! Memory stress testing
 
-use crate::{MemoryPattern, MemoryStressConfig, MemoryStressResult, Result, StressError};
+use crate::{MemoryPattern, MemoryStressConfig, MemoryStressResult, Result};
 use rand::Rng;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -33,7 +33,6 @@ impl MemoryStress {
         let latency_sum = self.latency_sum.clone();
         let latency_count = self.latency_count.clone();
 
-        let start = Instant::now();
         let duration_secs = duration.as_secs_f64();
 
         // Run memory access pattern
@@ -121,7 +120,6 @@ impl MemoryStress {
         let start = Instant::now();
         let end_ptr = ptr + size;
         let mut current = ptr;
-        let mut rng = rand::thread_rng();
 
         while start.elapsed() < duration {
             let access_start = Instant::now();
@@ -150,7 +148,6 @@ impl MemoryStress {
         duration: Duration,
     ) {
         let start = Instant::now();
-        let end_ptr = ptr + size;
         let mut rng = rand::thread_rng();
 
         while start.elapsed() < duration {

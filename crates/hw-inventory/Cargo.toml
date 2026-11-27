@@ -8,18 +8,17 @@ description = "Hardware inventory: CPU, GPU, memory, storage, battery, USB, PCI"
 
 [dependencies]
 sysinfo = { workspace = true }
-nvml-wrapper = { workspace = true }
+nvml-wrapper = { workspace = true, optional = true }
 # smartctl = { workspace = true }  # Removed - not available on crates.io
 usb-ids = { workspace = true }
-pci-ids = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-anyhow = { workspace = true }
 tokio = { workspace = true }
-tracing = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 
 [features]
 default = []
+# NVIDIA GPU details via NVML (needs the NVIDIA driver at runtime)
+nvml = ["dep:nvml-wrapper"]

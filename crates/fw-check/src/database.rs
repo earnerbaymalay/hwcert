@@ -5,7 +5,6 @@ use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FirmwareDatabase {
@@ -46,9 +45,12 @@ impl FirmwareDatabaseClient {
 
     pub async fn update_database(&mut self) -> Result<()> {
         let url = format!("{}/firmware_database.json", self.base_url);
-        let response = reqwest::get(&url)
+        let response = self
+            .client
+            .get(&url)
+            .send()
             .await
-            .map_err(|e| FirmwareError::Http(e))?;
+            .map_err(FirmwareError::Http)?;
 
         let database: FirmwareDatabase = response
             .json()

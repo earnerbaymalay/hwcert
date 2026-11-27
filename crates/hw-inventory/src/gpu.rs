@@ -47,7 +47,7 @@ pub fn gather_gpu_info() -> Result<Vec<GpuInfo>> {
 fn gather_nvidia_gpus() -> Result<Vec<GpuInfo>> {
     #[cfg(feature = "nvml")]
     {
-        use nvml_wrapper::Nvml;
+        use nvml_wrapper::NVML as Nvml;
         let nvml = Nvml::init().map_err(|e| InventoryError::Nvml(e.to_string()))?;
         let device_count = nvml
             .device_count()

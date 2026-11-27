@@ -1,11 +1,9 @@
 //! CPU stress testing
 
 use crate::{CpuStressConfig, CpuStressResult, CpuWorkload, Result, StressError};
-use rayon::prelude::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use uuid::Uuid;
 
 pub struct CpuStress {
     config: CpuStressConfig,
@@ -139,7 +137,7 @@ impl CpuStress {
         let mut hasher = DefaultHasher::new();
         for i in 0..1_000_000 {
             i.hash(&mut hasher);
-            hasher.finish();
+            std::hint::black_box(hasher.finish());
         }
         ops_counter.fetch_add(1_000_000, Ordering::Relaxed);
     }

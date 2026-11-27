@@ -1,7 +1,6 @@
 //! PCI device information gathering
 
-use crate::{InventoryError, Result};
-use pci_ids::{Class as PciClass, Device as PciDeviceId};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -49,7 +48,7 @@ pub enum PciDeviceClass {
 }
 
 pub fn gather_pci_devices() -> Result<Vec<PciDevice>> {
-    let mut devices = Vec::new();
+    let devices = Vec::new();
 
     // On Windows, use Windows API or WMI
     // For now, return empty vec
@@ -57,7 +56,8 @@ pub fn gather_pci_devices() -> Result<Vec<PciDevice>> {
     Ok(devices)
 }
 
-fn lookup_pci_class(class_code: u8, subclass: u8, prog_if: u8) -> PciDeviceClass {
+#[allow(dead_code)] // used once PCI enumeration (WMI / sysfs) is implemented
+fn lookup_pci_class(class_code: u8, _subclass: u8, _prog_if: u8) -> PciDeviceClass {
     match class_code {
         0x00 => PciDeviceClass::Unclassified,
         0x01 => PciDeviceClass::MassStorage,

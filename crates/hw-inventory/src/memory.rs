@@ -1,6 +1,6 @@
 //! Memory information gathering
 
-use crate::{InventoryError, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
 use uuid::Uuid;

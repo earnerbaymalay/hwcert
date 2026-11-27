@@ -1,16 +1,15 @@
 //! Thermal monitoring
 
 use crate::{Result, StressError, ThermalReading};
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-use uuid::Uuid;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 pub struct ThermalMonitor {
     running: Arc<AtomicBool>,
     thermal_limit: Option<f32>,
-    readings: Arc<Vec<ThermalReading>>,
+    readings: Arc<Mutex<Vec<ThermalReading>>>,
 }
 
 impl ThermalMonitor {
@@ -18,7 +17,7 @@ impl ThermalMonitor {
         Self {
             running: Arc::new(AtomicBool::new(false)),
             thermal_limit,
-            readings: Arc::new(Vec::new()),
+            readings: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -46,23 +45,17 @@ impl ThermalMonitor {
                     ambient_temp,
                 };
 
-                // Check thermal limit
-                if let Some(limit) = thermal_limit {
-                    if let Some(temp) = cpu_temp {
-                        if temp > limit {
-                            running.store(false, Ordering::SeqCst);
-                            break;
-                        }
-                    }
-                    if let Some(temp) = gpu_temp {
-                        if temp > limit {
-                            running.store(false, Ordering::SeqCst);
-                            break;
-                        }
-                    }
+                let over_limit = thermal_limit.is_some_and(|limit| {
+                    [cpu_temp, gpu_temp].into_iter().flatten().any(|t| t > limit)
+                });
+                if let Ok(mut log) = readings.lock() {
+                    log.push(reading);
+                }
+                if over_limit {
+                    running.store(false, Ordering::SeqCst);
+                    break;
                 }
 
-                // Store reading (in real implementation, use proper synchronization)
                 std::thread::sleep(Duration::from_secs(1));
             }
         });
@@ -72,7 +65,10 @@ impl ThermalMonitor {
 
     pub fn stop(&self) -> Vec<ThermalReading> {
         self.running.store(false, Ordering::SeqCst);
-        Vec::new() // In real implementation, return collected readings
+        self.readings
+            .lock()
+            .map(|mut log| std::mem::take(&mut *log))
+            .unwrap_or_default()
     }
 
     fn read_cpu_temp() -> Option<f32> {
@@ -89,15 +85,8 @@ impl ThermalMonitor {
     }
 
     fn read_gpu_temp() -> Option<f32> {
-        #[cfg(feature = "nvml")]
-        {
-            // Use NVML
-            None
-        }
-        #[cfg(not(feature = "nvml"))]
-        {
-            None
-        }
+        // GPU temperature comes from hw-inventory's NVML path; not sampled here yet.
+        None
     }
 
     fn read_ambient_temp() -> Option<f32> {

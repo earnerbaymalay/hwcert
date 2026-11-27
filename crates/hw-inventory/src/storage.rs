@@ -1,6 +1,6 @@
 //! Storage information gathering
 
-use crate::{InventoryError, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use sysinfo::{Disk, DiskKind, Disks};
 use uuid::Uuid;
@@ -60,7 +60,7 @@ pub fn gather_storage_info() -> Result<Vec<StorageInfo>> {
     Ok(storage)
 }
 
-fn gather_smart_data(disk: &Disk) -> Result<SmartData> {
+fn gather_smart_data(_disk: &Disk) -> Result<SmartData> {
     // smartctl integration would go here when a proper crate is available
     // For now, return mock data
     Ok(SmartData {

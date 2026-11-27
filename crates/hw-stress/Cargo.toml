@@ -7,11 +7,8 @@ publish = { workspace = true }
 description = "Hardware stress testing: CPU, GPU, memory, disk"
 
 [dependencies]
-rayon = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
-anyhow = { workspace = true }
 tokio = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
@@ -20,3 +17,5 @@ getrandom = { workspace = true }
 
 [features]
 default = []
+# Placeholder GPU stress path (no CUDA/OpenCL backend yet)
+gpu = []

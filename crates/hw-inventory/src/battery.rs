@@ -1,8 +1,7 @@
 //! Battery information gathering
 
-use crate::{InventoryError, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
-use sysinfo::System;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,7 +33,7 @@ pub enum BatteryState {
 
 pub fn gather_battery_info() -> Result<Vec<BatteryInfo>> {
 
-    let mut batteries = Vec::new();
+    let batteries = Vec::new();
 
     // sysinfo doesn't expose detailed battery info directly
     // On Windows, we'd use WMI or WinRT APIs

@@ -2,7 +2,7 @@
 
 use crate::{DiskPattern, DiskStressConfig, DiskStressResult, Result, StressError};
 use rand::Rng;
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -127,7 +127,7 @@ impl DiskStress {
     }
 
     fn create_test_file(path: &Path, size: u64) -> Result<()> {
-        let mut file = OpenOptions::new().create(true).write(true).open(path)?;
+        let file = OpenOptions::new().create(true).write(true).open(path)?;
         file.set_len(size)?;
         Ok(())
     }

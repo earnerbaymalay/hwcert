@@ -1,7 +1,7 @@
 //! Stress test runner
 
-use crate::{Result, StressError, StressTestConfig, StressTestResults, ThermalMonitor, ThermalReading};
-use chrono::{DateTime, Utc};
+use crate::{Result, StressTestConfig, StressTestResults, ThermalMonitor};
+use chrono::Utc;
 use crate::cpu::CpuStress;
 use crate::disk::DiskStress;
 use crate::gpu::GpuStress;
@@ -12,7 +12,6 @@ use uuid::Uuid;
 pub struct StressRunner {
     config: StressTestConfig,
     thermal_monitor: Option<ThermalMonitor>,
-    thermal_readings: Vec<ThermalReading>,
 }
 
 impl StressRunner {
@@ -23,12 +22,10 @@ impl StressRunner {
         Self {
             config,
             thermal_monitor,
-            thermal_readings: Vec::new(),
         }
     }
 
     pub async fn run(&mut self) -> Result<StressTestResults> {
-        let start_time = Utc::now();
         let mut errors = Vec::new();
 
         // Start thermal monitoring
@@ -120,10 +117,10 @@ impl StressRunner {
 
     fn check_results(
         &self,
-        cpu: &Option<crate::CpuStressResult>,
-        memory: &Option<crate::MemoryStressResult>,
-        disk: &Option<crate::DiskStressResult>,
-        gpu: &Option<crate::GpuStressResult>,
+        _cpu: &Option<crate::CpuStressResult>,
+        _memory: &Option<crate::MemoryStressResult>,
+        _disk: &Option<crate::DiskStressResult>,
+        _gpu: &Option<crate::GpuStressResult>,
     ) -> bool {
         // Define pass criteria
         true

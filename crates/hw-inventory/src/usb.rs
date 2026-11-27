@@ -1,6 +1,6 @@
 //! USB device information gathering
 
-use crate::{InventoryError, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use usb_ids::Device;
 use uuid::Uuid;
@@ -60,7 +60,7 @@ pub enum UsbSpeed {
 }
 
 pub fn gather_usb_devices() -> Result<Vec<UsbDevice>> {
-    let mut devices = Vec::new();
+    let devices = Vec::new();
 
     // On Windows, use Windows API or WMI
     // For now, return empty vec
@@ -68,6 +68,7 @@ pub fn gather_usb_devices() -> Result<Vec<UsbDevice>> {
     Ok(devices)
 }
 
+#[allow(dead_code)] // used once USB enumeration (WMI / sysfs) is implemented
 fn lookup_usb_name(vid: u16, pid: u16) -> (String, String) {
     if let Some(device) = Device::from_vid_pid(vid, pid) {
         (device.vendor().name().to_string(), device.name().to_string())
