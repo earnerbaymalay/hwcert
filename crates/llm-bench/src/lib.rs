@@ -1,10 +1,12 @@
 //! LLM inference benchmarking crate
 //! Provides benchmarking for llama.cpp, candle, and ONNX Runtime
 
-pub mod candle;
+#[cfg(feature = "llama")]
 pub mod llama_cpp;
-pub mod metrics;
+#[cfg(feature = "onnx")]
 pub mod onnx;
+pub mod candle;
+pub mod metrics;
 pub mod runner;
 pub mod tokenizer;
 
@@ -35,9 +37,39 @@ pub struct BenchConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Backend {
+    #[cfg(feature = "llama")]
     LlamaCpp,
     Candle,
+    #[cfg(feature = "onnx")]
     OnnxRuntime,
+}
+
+#[cfg(not(feature = "llama"))]
+impl Backend {
+    pub fn is_llama(&self) -> bool {
+        false
+    }
+}
+
+#[cfg(feature = "llama")]
+impl Backend {
+    pub fn is_llama(&self) -> bool {
+        matches!(self, Backend::LlamaCpp)
+    }
+}
+
+#[cfg(not(feature = "onnx"))]
+impl Backend {
+    pub fn is_onnx(&self) -> bool {
+        false
+    }
+}
+
+#[cfg(feature = "onnx")]
+impl Backend {
+    pub fn is_onnx(&self) -> bool {
+        matches!(self, Backend::OnnxRuntime)
+    }
 }
 
 /// Benchmark results
@@ -124,7 +156,7 @@ mod tests {
     fn test_bench_config() {
         let config = BenchConfig {
             model_path: "model.gguf".to_string(),
-            backend: Backend::LlamaCpp,
+            backend: Backend::Candle,
             prompt: "Hello".to_string(),
             max_tokens: 100,
             temperature: 0.7,

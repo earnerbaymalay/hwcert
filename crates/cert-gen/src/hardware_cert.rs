@@ -1,8 +1,8 @@
 //! Hardware certificate generation
 
 use crate::{
-    generate_certificate_pdf, generate_qr_code, sign_data, CertError, Certificate, CertificateType,
-    KeyPair, Result,
+    generate_certificate_pdf, generate_qr_code, sign_data, Certificate, CertificateType, KeyPair,
+    Result,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

@@ -7,12 +7,12 @@ publish = { workspace = true }
 description = "LLM inference benchmarking with llama.cpp, candle, and ONNX Runtime"
 
 [dependencies]
-llama-cpp-2 = { workspace = true }
+# Optional: llama.cpp (requires cmake + Visual Studio build tools)
+llama-cpp-2 = { workspace = true, optional = true }
 tokenizers = { workspace = true }
 candle-core = { workspace = true }
 candle-nn = { workspace = true }
 candle-transformers = { workspace = true }
-onnxruntime = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -24,5 +24,10 @@ chrono = { workspace = true }
 rand = { workspace = true }
 reqwest = { workspace = true }
 
+# Optional: ONNX Runtime (requires valid download URL for onnxruntime-sys)
+onnxruntime = { version = "0.0.14", optional = true }
+
 [features]
 default = []
+llama = ["llama-cpp-2"]
+onnx = ["onnxruntime"]

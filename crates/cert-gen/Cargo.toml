@@ -18,6 +18,10 @@ anyhow = { workspace = true }
 base64 = { workspace = true }
 uuid = { workspace = true }
 rand = { workspace = true }
+zeroize = { workspace = true }
+hex = { workspace = true }
+png = { workspace = true }
+getrandom = { workspace = true }
 
 [features]
 default = []

@@ -1,5 +1,5 @@
-use cert_gen::{generate_hardware_attestation, KeyPair};
-use clap::{Parser, Subcommand};
+use cert_gen::{generate_hardware_attestation, KeyPair, Certificate};
+use clap::{Parser, Subcommand, ValueEnum};
 use fw_check::gather_firmware_report;
 use hw_inventory::gather_inventory;
 use hw_stress::{run_stress_test, CpuStressConfig, CpuWorkload, StressTestConfig};
@@ -174,7 +174,7 @@ enum Commands {
     },
 }
 
-#[derive(clap::ValueEnum, Clone, Debug)]
+#[derive(ValueEnum, Clone, Debug)]
 enum CertType {
     Hardware,
     Firmware,
@@ -385,7 +385,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             info!("Verifying certificate...");
 
             let cert_data = std::fs::read_to_string(&cert)?;
-            let cert: cert_gen::Certificate = serde_json::from_str(&cert_data)?;
+            let cert: Certificate = serde_json::from_str(&cert_data)?;
 
             let pubkey_data = std::fs::read_to_string(&pubkey)?;
             let pubkey_bytes = hex::decode(pubkey_data.trim())?;

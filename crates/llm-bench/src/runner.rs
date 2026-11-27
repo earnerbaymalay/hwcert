@@ -6,9 +6,13 @@ use crate::{
 };
 use candle::CandleRunner;
 use chrono::{DateTime, Utc};
-use llama_cpp::LlamaCppRunner;
-use onnx::OnnxRunner;
 use uuid::Uuid;
+
+#[cfg(feature = "llama")]
+use llama_cpp::LlamaCppRunner;
+
+#[cfg(feature = "onnx")]
+use onnx::OnnxRunner;
 
 pub struct BenchRunner {
     config: BenchConfig,
@@ -21,6 +25,7 @@ impl BenchRunner {
 
     pub async fn run(&mut self) -> Result<BenchResult> {
         let result = match self.config.backend {
+            #[cfg(feature = "llama")]
             crate::Backend::LlamaCpp => {
                 let mut runner = LlamaCppRunner::new(self.config.clone())?;
                 runner.run_benchmark().await?
@@ -29,6 +34,7 @@ impl BenchRunner {
                 let mut runner = CandleRunner::new(self.config.clone())?;
                 runner.run_benchmark().await?
             }
+            #[cfg(feature = "onnx")]
             crate::Backend::OnnxRuntime => {
                 let mut runner = OnnxRunner::new(self.config.clone())?;
                 runner.run_benchmark().await?

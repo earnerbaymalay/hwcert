@@ -4,10 +4,10 @@ use crate::{
     Result, StressError, StressTestConfig, StressTestResults, ThermalMonitor, ThermalReading,
 };
 use chrono::{DateTime, Utc};
-use hw_stress::cpu::CpuStress;
-use hw_stress::disk::DiskStress;
-use hw_stress::gpu::GpuStress;
-use hw_stress::memory::MemoryStress;
+use crate::cpu::CpuStress;
+use crate::disk::DiskStress;
+use crate::gpu::GpuStress;
+use crate::memory::MemoryStress;
 use std::time::Duration;
 use uuid::Uuid;
 
@@ -108,7 +108,7 @@ impl StressRunner {
 
         Ok(StressTestResults {
             id: Uuid::new_v4(),
-            timestamp: start_time,
+            timestamp: Utc::now(),
             config: self.config.clone(),
             cpu_result,
             memory_result,

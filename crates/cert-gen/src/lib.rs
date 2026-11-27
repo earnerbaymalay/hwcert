@@ -6,10 +6,12 @@ pub mod hardware_cert;
 pub mod pdf_cert;
 pub mod qr_code;
 
-use cert_gen::ed25519_keys::{sign_data, verify_signature, KeyPair};
-use cert_gen::hardware_cert::{generate_hardware_certificate, HardwareCertificate};
-use cert_gen::pdf_cert::generate_certificate_pdf;
-use cert_gen::qr_code::generate_qr_code;
+// Re-export key types
+pub use ed25519_keys::{sign_data, verify_signature, KeyPair};
+pub use hardware_cert::generate_hardware_certificate;
+pub use pdf_cert::generate_certificate_pdf;
+pub use qr_code::generate_qr_code;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -56,6 +58,8 @@ pub enum CertError {
     PdfGen(String),
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
+    #[error("Hex decoding error: {0}")]
+    Hex(#[from] hex::FromHexError),
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 }
@@ -82,7 +86,8 @@ pub async fn generate_firmware_verification(
     });
 
     let signature = sign_data(key_pair, &serde_json::to_vec(&payload)?)?;
-    let qr_code = generate_qr_code(&signature)?;
+    let signature_hex = hex::encode(signature.to_bytes());
+    let qr_code = generate_qr_code(&signature_hex)?;
 
     Ok(Certificate {
         id: Uuid::new_v4(),
@@ -92,7 +97,7 @@ pub async fn generate_firmware_verification(
         issued_at: chrono::Utc::now(),
         expires_at: None,
         public_key: key_pair.verifying_key_bytes(),
-        signature: signature.to_string(),
+        signature: signature_hex,
         payload,
         qr_code: Some(qr_code),
         pdf_data: None,
@@ -111,7 +116,8 @@ pub async fn generate_stress_test_certificate(
     });
 
     let signature = sign_data(key_pair, &serde_json::to_vec(&payload)?)?;
-    let qr_code = generate_qr_code(&signature)?;
+    let signature_hex = hex::encode(signature.to_bytes());
+    let qr_code = generate_qr_code(&signature_hex)?;
     let pdf_data = generate_certificate_pdf(&payload, &qr_code)?;
 
     Ok(Certificate {
@@ -122,7 +128,7 @@ pub async fn generate_stress_test_certificate(
         issued_at: chrono::Utc::now(),
         expires_at: Some(chrono::Utc::now() + chrono::Duration::days(365)),
         public_key: key_pair.verifying_key_bytes(),
-        signature: signature.to_string(),
+        signature: signature_hex,
         payload,
         qr_code: Some(qr_code),
         pdf_data: Some(pdf_data),
@@ -148,5 +154,13 @@ mod tests {
         let payload = serde_json::json!({"test": "data"});
         let result = generate_hardware_attestation(&payload, &key_pair).await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_sign_verify_roundtrip() {
+        let key_pair = KeyPair::generate();
+        let data = b"hello hardware";
+        let sig = key_pair.sign(data);
+        assert!(key_pair.verify(data, &sig).is_ok());
     }
 }
