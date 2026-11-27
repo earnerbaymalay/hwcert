@@ -63,10 +63,25 @@ pub enum FirmwareError {
 
 pub type Result<T> = std::result::Result<T, FirmwareError>;
 
-/// Gather complete firmware information
+/// Gather complete firmware information, including the online update-database check
 pub async fn gather_firmware_report() -> Result<FirmwareReport> {
+    gather_firmware_report_with(true).await
+}
+
+/// Gather firmware information; `check_db = false` skips the network database lookup
+/// and reports an empty check, so the report works fully offline.
+pub async fn gather_firmware_report_with(check_db: bool) -> Result<FirmwareReport> {
     let smbios = smbios::gather_smbios_info()?;
-    let database_check = database::check_firmware_database().await?;
+    let database_check = if check_db {
+        database::check_firmware_database().await?
+    } else {
+        DatabaseCheckResult {
+            checked_count: 0,
+            outdated_count: 0,
+            critical_count: 0,
+            updates_available: Vec::new(),
+        }
+    };
 
     Ok(FirmwareReport {
         id: Uuid::new_v4(),

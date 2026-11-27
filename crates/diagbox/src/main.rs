@@ -1,13 +1,12 @@
-use cert_gen::{generate_hardware_attestation, KeyPair, Certificate};
+use cert_gen::{KeyPair, Certificate};
 use clap::{Parser, Subcommand, ValueEnum};
-use fw_check::gather_firmware_report;
+use fw_check::gather_firmware_report_with;
 use hw_inventory::gather_inventory;
 use hw_stress::{run_stress_test, CpuStressConfig, CpuWorkload, StressTestConfig};
 use llm_bench::{run_benchmark, Backend, BenchConfig};
 use std::path::PathBuf;
-use tracing::{error, info};
+use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use uuid::Uuid;
 
 #[derive(Parser)]
 #[command(name = "diagbox")]
@@ -120,14 +119,14 @@ enum Commands {
         output: Option<PathBuf>,
 
         /// Check against database
-        #[arg(long, default_value = "true")]
+        #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
         check_db: bool,
     },
 
     /// Generate certificate
     Cert {
         /// Certificate type
-        #[arg(short, long, value_enum)]
+        #[arg(short = 't', long, value_enum)]
         cert_type: CertType,
 
         /// Input file (JSON)
@@ -143,11 +142,11 @@ enum Commands {
         output: Option<PathBuf>,
 
         /// Generate QR code
-        #[arg(long, default_value = "true")]
+        #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
         qr: bool,
 
         /// Generate PDF
-        #[arg(long, default_value = "true")]
+        #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
         pdf: bool,
     },
 
@@ -165,7 +164,7 @@ enum Commands {
     /// Verify certificate
     Verify {
         /// Certificate file
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         cert: PathBuf,
 
         /// Public key file (hex)
@@ -318,7 +317,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Firmware { output, check_db } => {
             info!("Checking firmware...");
-            let report = gather_firmware_report().await?;
+            let report = gather_firmware_report_with(check_db).await?;
 
             let output_str = serde_json::to_string_pretty(&report)?;
             if let Some(path) = output {
@@ -344,7 +343,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let key_data = std::fs::read(&key)?;
             let key_pair = KeyPair::from_pkcs8(&key_data)?;
 
-            let cert = match cert_type {
+            let mut cert = match cert_type {
                 CertType::Hardware => {
                     cert_gen::generate_hardware_attestation(&payload, &key_pair).await?
                 }
@@ -359,6 +358,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     cert_gen::generate_stress_test_certificate(&payload, &key_pair).await?
                 }
             };
+            if !qr {
+                cert.qr_code = None;
+            }
+            if !pdf {
+                cert.pdf_data = None;
+            }
 
             let output_str = serde_json::to_string_pretty(&cert)?;
             if let Some(path) = output {
@@ -408,4 +413,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Cli;
+    use clap::CommandFactory;
+
+    #[test]
+    fn cli_definition_is_valid() {
+        Cli::command().debug_assert();
+    }
 }
