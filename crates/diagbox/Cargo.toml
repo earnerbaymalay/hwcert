@@ -22,6 +22,13 @@ hw-stress = { path = "../hw-stress" }
 llm-bench = { path = "../llm-bench" }
 fw-check = { path = "../fw-check" }
 cert-gen = { path = "../cert-gen" }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+uuid = { workspace = true }
+hex = { workspace = true }
+blake3 = { workspace = true }
 
 [features]
 default = []
+llama = ["llm-bench/llama"]
+onnx = ["llm-bench/onnx"]

@@ -228,14 +228,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     threads: if cpu_threads > 0 {
                         cpu_threads
                     } else {
-                        num_cpus::get()
+                        std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1)
                     },
                     workload: CpuWorkload::Mixed,
                     affinity: None,
                 }),
                 memory: memory_gb.map(|gb| hw_stress::MemoryStressConfig {
                     size_gb: gb,
-                    pattern: hw_stress::MemoryPattern::Mixed,
+                    pattern: hw_stress::MemoryPattern::Random,
                     stride: 64,
                 }),
                 disk: disk_path
@@ -245,7 +245,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         size_gb: gb,
                         pattern: hw_stress::DiskPattern::Mixed,
                         block_size: 4096,
-                        threads: num_cpus::get(),
+                        threads: std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1),
                         fsync: true,
                     }),
                 gpu: None,
@@ -278,9 +278,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             info!("Running LLM benchmark...");
 
             let backend = match backend.as_str() {
+                #[cfg(feature = "llama")]
                 "llama.cpp" => Backend::LlamaCpp,
                 "candle" => Backend::Candle,
+                #[cfg(feature = "onnx")]
                 "onnx" => Backend::OnnxRuntime,
+                #[cfg(not(feature = "llama"))]
+                "llama.cpp" => return Err("llama.cpp backend not compiled in (build with --features llama)".into()),
+                #[cfg(not(feature = "onnx"))]
+                "onnx" => return Err("onnx backend not compiled in (build with --features onnx)".into()),
                 _ => return Err("Invalid backend".into()),
             };
 
