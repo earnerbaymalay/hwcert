@@ -39,10 +39,8 @@ pub fn gather_gpu_info() -> Result<Vec<GpuInfo>> {
         }
     }
 
-    if gpus.is_empty() {
-        return Err(InventoryError::Nvml("No GPUs detected".to_string()));
-    }
-
+    // No detected GPU is a valid result (headless box, or no NVML/WMI backend yet);
+    // it must not fail the whole inventory.
     Ok(gpus)
 }
 

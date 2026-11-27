@@ -28,6 +28,9 @@ pub fn gather_cpu_info() -> Result<CpuInfo> {
     let mut sys =
         System::new_with_specifics(RefreshKind::new().with_cpu(CpuRefreshKind::everything()));
     sys.refresh_cpu();
+    // cpu_usage is a delta between two samples; the first sample alone reads as 100%.
+    std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+    sys.refresh_cpu();
 
     let cpus = sys.cpus();
     let first_cpu = cpus.first();
