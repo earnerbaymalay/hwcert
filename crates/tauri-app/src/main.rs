@@ -1,13 +1,9 @@
-use cert_gen::{generate_hardware_attestation, KeyPair};
-use fw_check::gather_firmware_report;
-use hw_inventory::gather_inventory;
-use hw_stress::{run_stress_test, CpuStressConfig, CpuWorkload, StressTestConfig};
-use llm_bench::{run_benchmark, Backend, BenchConfig};
-use tauri::Manager;
+// Prevents an extra console window on Windows in release builds.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
+fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
@@ -34,10 +30,14 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
+fn cpu_count() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1)
+}
+
 mod inventory {
     use hw_inventory::{gather_inventory, HardwareInventory};
-    use std::sync::Mutex;
-    use tauri::State;
 
     #[tauri::command]
     pub async fn gather_inventory_cmd() -> Result<HardwareInventory, String> {
@@ -48,10 +48,8 @@ mod inventory {
 mod stress {
     use hw_stress::{
         run_stress_test, CpuStressConfig, CpuWorkload, DiskPattern, DiskStressConfig,
-        MemoryPattern, MemoryStressConfig, StressTestConfig,
+        MemoryPattern, MemoryStressConfig, StressTestConfig, StressTestResults,
     };
-    use std::sync::Mutex;
-    use tauri::State;
 
     #[derive(serde::Deserialize)]
     pub struct StressConfig {
@@ -65,18 +63,17 @@ mod stress {
     }
 
     #[tauri::command]
-    pub async fn run_stress_test_cmd(
-        config: StressConfig,
-    ) -> Result<hw_stress::StressTestResults, String> {
+    pub async fn run_stress_test_cmd(config: StressConfig) -> Result<StressTestResults, String> {
+        let threads = crate::cpu_count();
         let config = StressTestConfig {
             cpu: Some(CpuStressConfig {
-                threads: config.cpu_threads.unwrap_or(num_cpus::get()),
+                threads: config.cpu_threads.unwrap_or(threads),
                 workload: CpuWorkload::Mixed,
                 affinity: None,
             }),
             memory: config.memory_gb.map(|gb| MemoryStressConfig {
                 size_gb: gb,
-                pattern: MemoryPattern::Mixed,
+                pattern: MemoryPattern::Random,
                 stride: 64,
             }),
             disk: config
@@ -87,7 +84,7 @@ mod stress {
                     size_gb: gb,
                     pattern: DiskPattern::Mixed,
                     block_size: 4096,
-                    threads: num_cpus::get(),
+                    threads,
                     fsync: true,
                 }),
             gpu: None,
@@ -101,8 +98,7 @@ mod stress {
 }
 
 mod bench {
-    use llm_bench::{run_benchmark, Backend, BenchConfig};
-    use tauri::State;
+    use llm_bench::{run_benchmark, Backend, BenchConfig, BenchResult};
 
     #[derive(serde::Deserialize)]
     pub struct BenchConfigInput {
@@ -116,20 +112,25 @@ mod bench {
         pub threads: Option<usize>,
     }
 
-    #[tauri::command]
-    pub async fn run_benchmark_cmd(
-        config: BenchConfigInput,
-    ) -> Result<llm_bench::BenchResult, String> {
-        let backend = match config.backend.as_str() {
-            "llama.cpp" => Backend::LlamaCpp,
-            "candle" => Backend::Candle,
-            "onnx" => Backend::OnnxRuntime,
-            _ => return Err("Invalid backend".to_string()),
-        };
+    fn parse_backend(name: &str) -> Result<Backend, String> {
+        match name {
+            #[cfg(feature = "llama")]
+            "llama.cpp" => Ok(Backend::LlamaCpp),
+            "candle" => Ok(Backend::Candle),
+            #[cfg(feature = "onnx")]
+            "onnx" => Ok(Backend::OnnxRuntime),
+            "llama.cpp" | "onnx" => Err(format!(
+                "Backend '{name}' is not enabled in this build (rebuild with the matching feature)"
+            )),
+            other => Err(format!("Unknown backend '{other}'")),
+        }
+    }
 
+    #[tauri::command]
+    pub async fn run_benchmark_cmd(config: BenchConfigInput) -> Result<BenchResult, String> {
         let config = BenchConfig {
+            backend: parse_backend(&config.backend)?,
             model_path: config.model_path,
-            backend,
             prompt: config.prompt,
             max_tokens: config.max_tokens,
             temperature: config.temperature,
@@ -148,16 +149,19 @@ mod bench {
 }
 
 mod firmware {
-    use fw_check::gather_firmware_report;
+    use fw_check::{gather_firmware_report, FirmwareReport};
 
     #[tauri::command]
-    pub async fn gather_firmware_report_cmd() -> Result<fw_check::FirmwareReport, String> {
+    pub async fn gather_firmware_report_cmd() -> Result<FirmwareReport, String> {
         gather_firmware_report().await.map_err(|e| e.to_string())
     }
 }
 
 mod cert {
-    use cert_gen::{generate_hardware_attestation, verify_certificate, Certificate};
+    use cert_gen::{
+        generate_firmware_verification, generate_hardware_attestation,
+        generate_stress_test_certificate, verify_certificate, Certificate, KeyPair,
+    };
     use serde_json::Value;
 
     #[derive(serde::Deserialize)]
@@ -169,18 +173,16 @@ mod cert {
 
     #[tauri::command]
     pub async fn generate_certificate_cmd(input: CertInput) -> Result<Certificate, String> {
-        let key_pair = crate::cert_gen::KeyPair::from_pkcs8(&input.private_key_pkcs8)
-            .map_err(|e| e.to_string())?;
+        let key_pair =
+            KeyPair::from_pkcs8(&input.private_key_pkcs8).map_err(|e| e.to_string())?;
 
-        match input.cert_type.as_str() {
+        let result = match input.cert_type.as_str() {
             "hardware" => generate_hardware_attestation(&input.payload, &key_pair).await,
-            "firmware" => cert_gen::generate_firmware_verification(&input.payload, &key_pair).await,
-            "stress_test" => {
-                cert_gen::generate_stress_test_certificate(&input.payload, &key_pair).await
-            }
-            _ => Err("Invalid certificate type".to_string()),
-        }
-        .map_err(|e| e.to_string())
+            "firmware" => generate_firmware_verification(&input.payload, &key_pair).await,
+            "stress_test" => generate_stress_test_certificate(&input.payload, &key_pair).await,
+            other => return Err(format!("Invalid certificate type '{other}'")),
+        };
+        result.map_err(|e| e.to_string())
     }
 
     #[derive(serde::Deserialize)]
@@ -196,27 +198,21 @@ mod cert {
 }
 
 mod key {
-    use crate::cert_gen::KeyPair;
+    use cert_gen::{verify_signature, KeyPair};
 
     #[derive(serde::Deserialize)]
     pub struct GenKeyInput {
         pub seed: Option<String>,
     }
 
+    /// Returns (raw 32-byte secret key, public key hex).
     #[tauri::command]
     pub async fn generate_key_pair_cmd(input: GenKeyInput) -> Result<(Vec<u8>, String), String> {
-        let key_pair = if let Some(seed) = input.seed {
-            let mut seed_bytes = [0u8; 32];
-            let seed_hash = blake3::hash(seed.as_bytes());
-            seed_bytes.copy_from_slice(&seed_hash.as_bytes()[..32]);
-            KeyPair::from_seed(&seed_bytes)
-        } else {
-            KeyPair::generate()
+        let key_pair = match input.seed {
+            Some(seed) => KeyPair::from_seed(blake3::hash(seed.as_bytes()).as_bytes()),
+            None => KeyPair::generate(),
         };
-
-        let pkcs8 = key_pair.to_pkcs8();
-        let pubkey = key_pair.verifying_key_bytes();
-        Ok((pkcs8, pubkey))
+        Ok((key_pair.to_pkcs8(), key_pair.verifying_key_bytes()))
     }
 
     #[derive(serde::Deserialize)]
@@ -228,8 +224,7 @@ mod key {
     #[tauri::command]
     pub async fn sign_data_cmd(input: SignInput) -> Result<String, String> {
         let key_pair = KeyPair::from_pkcs8(&input.private_key_pkcs8).map_err(|e| e.to_string())?;
-        let signature = key_pair.sign(input.data.as_bytes());
-        Ok(hex::encode(signature.to_bytes()))
+        Ok(hex::encode(key_pair.sign(input.data.as_bytes()).to_bytes()))
     }
 
     #[derive(serde::Deserialize)]
@@ -241,11 +236,8 @@ mod key {
 
     #[tauri::command]
     pub async fn verify_signature_cmd(input: VerifyInput) -> Result<bool, String> {
-        let pubkey_bytes = hex::decode(&input.public_key_hex).map_err(|e| e.to_string())?;
-        let signature_bytes = hex::decode(&input.signature_hex).map_err(|e| e.to_string())?;
-        let data = input.data.as_bytes();
-
-        crate::cert_gen::verify_signature(&pubkey_bytes, data, &signature_bytes)
-            .map_err(|e| e.to_string())
+        let pubkey = hex::decode(&input.public_key_hex).map_err(|e| e.to_string())?;
+        let signature = hex::decode(&input.signature_hex).map_err(|e| e.to_string())?;
+        verify_signature(&pubkey, input.data.as_bytes(), &signature).map_err(|e| e.to_string())
     }
 }

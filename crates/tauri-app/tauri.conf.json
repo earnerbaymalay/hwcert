@@ -4,10 +4,7 @@
   "productName": "HWCert",
   "version": "0.1.0",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
-    "devUrl": "http://localhost:1420",
-    "frontendDist": "../dist"
+    "frontendDist": "ui"
   },
   "app": {
     "windows": [
@@ -19,23 +16,19 @@
         "minHeight": 600,
         "decorations": true,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "label": "main"
       }
     ],
     "security": {
-      "csp": "default-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https: fonts.googleapis.com;"
-    }
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    },
+    "withGlobalTauri": true
   },
-  "plugins": {
-    "dialog": {},
-    "fs": {},
-    "shell": { "open": true },
-    "store": {},
-    "opener": {},
-    "clipboard": {},
-    "notification": {}
-  },
+  "plugins": {},
   "bundle": {
-    "icon": []
+    "icon": [
+      "icons/icon.ico"
+    ]
   }
 }

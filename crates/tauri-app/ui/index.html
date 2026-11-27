@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HWCert</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>HWCert</h1>
+    <p>Offline hardware diagnostics &amp; signed certificates</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="h-inv">
+      <h2 id="h-inv">Inventory &amp; firmware</h2>
+      <button id="btn-inventory">Gather inventory</button>
+      <button id="btn-firmware">Firmware report</button>
+    </section>
+
+    <section aria-labelledby="h-stress">
+      <h2 id="h-stress">Stress test</h2>
+      <label>Duration (s) <input id="stress-duration" type="number" min="1" value="30" /></label>
+      <label>Memory (GB, optional) <input id="stress-mem" type="number" min="0" step="0.5" /></label>
+      <button id="btn-stress">Run stress test</button>
+    </section>
+
+    <section aria-labelledby="h-bench">
+      <h2 id="h-bench">LLM benchmark</h2>
+      <label>Model path <input id="bench-model" type="text" placeholder="C:\models\model.gguf" /></label>
+      <label>Backend
+        <select id="bench-backend">
+          <option value="candle">candle</option>
+          <option value="llama.cpp">llama.cpp</option>
+          <option value="onnx">onnx</option>
+        </select>
+      </label>
+      <button id="btn-bench">Run benchmark</button>
+    </section>
+
+    <section aria-labelledby="h-cert">
+      <h2 id="h-cert">Certificate</h2>
+      <p class="hint">Signs the last inventory, firmware, or stress result with a fresh Ed25519 key.</p>
+      <button id="btn-keygen">Generate key pair</button>
+      <button id="btn-cert">Sign last result</button>
+      <button id="btn-verify">Verify certificate</button>
+    </section>
+
+    <section aria-labelledby="h-out" class="wide">
+      <h2 id="h-out">Output <span id="status" role="status"></span></h2>
+      <pre id="output">Ready.</pre>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

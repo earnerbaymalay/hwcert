@@ -16,8 +16,6 @@ tauri-plugin-fs = { workspace = true }
 tauri-plugin-opener = { workspace = true }
 tauri-plugin-shell = { workspace = true }
 tauri-plugin-store = { workspace = true }
-tauri-plugin-clipboard = { workspace = true }
-tauri-plugin-notification = { workspace = true }
 hw-inventory = { path = "../hw-inventory" }
 hw-stress = { path = "../hw-stress" }
 llm-bench = { path = "../llm-bench" }
@@ -25,10 +23,11 @@ fw-check = { path = "../fw-check" }
 cert-gen = { path = "../cert-gen" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-tokio = { workspace = true }
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-uuid = { workspace = true }
+tracing-subscriber = { workspace = true }
+hex = { workspace = true }
+blake3 = { workspace = true }
 
 [features]
 default = []
+llama = ["llm-bench/llama"]
+onnx = ["llm-bench/onnx"]
