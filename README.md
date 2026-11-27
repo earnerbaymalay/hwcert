@@ -107,18 +107,28 @@ graph TD
 
 ```
 PROJECT_NAME/
-├── Cargo.toml              # Workspace root
-├── tauri.conf.json         # Tauri configuration
+├── Cargo.toml
+├── tauri.conf.json
 ├── build.sh / build.cmd    # Build scripts
-├── .github/workflows/      # CI/CD
+├── .github/workflows/
 ├── crates/
-│   ├── app/                # Tauri entry point
-│   ├── core/               # Business logic
-│   ├── cli/                # CLI binary
-│   └── shared/             # Shared utilities
-├── frontend/               # TypeScript + Vite
-└── docs/                   # Documentation
+│   ├── app/
+│   ├── core/
+│   ├── cli/
+│   └── shared/
+├── frontend/
+└── docs/
 ```
+
+- `Cargo.toml` — Workspace root
+- `tauri.conf.json` — Tauri configuration
+- `.github/workflows/` — CI/CD
+- `crates/app/` — Tauri entry point
+- `crates/core/` — Business logic
+- `crates/cli/` — CLI binary
+- `crates/shared/` — Shared utilities
+- `frontend/` — TypeScript + Vite
+- `docs/` — Documentation
 
 ## Development
 
