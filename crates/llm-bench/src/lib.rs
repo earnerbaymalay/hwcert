@@ -11,8 +11,7 @@ pub mod runner;
 pub mod tokenizer;
 
 use chrono::{DateTime, Utc};
-use llm_bench::metrics::{BenchMetrics, LatencyMetrics, TokenMetrics};
-use llm_bench::runner::{BenchConfig, BenchResult, BenchRunner};
+pub use crate::runner::BenchRunner;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;

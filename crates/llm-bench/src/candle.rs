@@ -1,17 +1,13 @@
 //! Candle backend for LLM benchmarking
 
-use crate::{BenchConfig, BenchError, GpuUsage, LatencyMetrics, MemoryUsage, Result, TokenMetrics};
-use candle_core::{DType, Device, Tensor};
-use candle_nn::VarBuilder;
-use candle_transformers::models::llama::{Config as LlamaConfig, Llama};
-use chrono::{DateTime, Utc};
-use std::time::{Duration, Instant};
+use crate::{BenchConfig, BenchError, Result};
+use candle_core::Device;
 use tokenizers::Tokenizer;
-use uuid::Uuid;
 
 pub struct CandleRunner {
-    model: Llama,
+    #[allow(dead_code)]
     tokenizer: Tokenizer,
+    #[allow(dead_code)]
     device: Device,
     config: BenchConfig,
 }
@@ -22,14 +18,11 @@ impl CandleRunner {
         let tokenizer = Tokenizer::from_file(&config.model_path)
             .map_err(|e| BenchError::Tokenizer(e.to_string()))?;
 
-        // Load model config (simplified)
-        let config_obj = LlamaConfig::default();
-        let vb = VarBuilder::zeros(DType::F32, &device);
-        let model =
-            Llama::load(vb, &config_obj).map_err(|e| BenchError::ModelLoad(e.to_string()))?;
+        // TODO: load real model weights (safetensors + config.json) via
+        // candle_transformers::models::llama::Llama::load once model packaging is decided.
+        // A zero-weight model was removed: it allocated a full-size model and benchmarked nothing.
 
         Ok(Self {
-            model,
             tokenizer,
             device,
             config,

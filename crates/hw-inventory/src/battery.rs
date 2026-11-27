@@ -1,6 +1,6 @@
 //! Battery information gathering
 
-use crate::{BatteryInfo, InventoryError, Result};
+use crate::{InventoryError, Result};
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
 use uuid::Uuid;
@@ -33,8 +33,6 @@ pub enum BatteryState {
 }
 
 pub fn gather_battery_info() -> Result<Vec<BatteryInfo>> {
-    let mut sys = System::new_all();
-    sys.refresh_battery();
 
     let mut batteries = Vec::new();
 

@@ -5,9 +5,8 @@ pub mod database;
 pub mod smbios;
 
 use chrono::{DateTime, Utc};
-use fw_check::database::FirmwareDatabase;
-use fw_check::smbios::SmbiosInfo;
-use fw_check::FirmwareReport;
+pub use crate::database::FirmwareDatabase;
+pub use crate::smbios::SmbiosInfo;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;

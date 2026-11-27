@@ -1,8 +1,6 @@
 //! Stress test runner
 
-use crate::{
-    Result, StressError, StressTestConfig, StressTestResults, ThermalMonitor, ThermalReading,
-};
+use crate::{Result, StressError, StressTestConfig, StressTestResults, ThermalMonitor, ThermalReading};
 use chrono::{DateTime, Utc};
 use crate::cpu::CpuStress;
 use crate::disk::DiskStress;

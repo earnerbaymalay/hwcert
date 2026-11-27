@@ -9,12 +9,12 @@ pub mod runner;
 pub mod thermal;
 
 use chrono::{DateTime, Utc};
-use hw_stress::cpu::CpuStress;
-use hw_stress::disk::DiskStress;
-use hw_stress::gpu::GpuStress;
-use hw_stress::memory::MemoryStress;
-use hw_stress::runner::{StressConfig, StressResult, StressRunner};
-use hw_stress::thermal::ThermalMonitor;
+pub use crate::cpu::CpuStress;
+pub use crate::disk::DiskStress;
+pub use crate::gpu::GpuStress;
+pub use crate::memory::MemoryStress;
+pub use crate::runner::StressRunner;
+pub use crate::thermal::ThermalMonitor;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;

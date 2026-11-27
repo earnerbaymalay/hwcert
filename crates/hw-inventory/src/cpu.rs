@@ -1,6 +1,6 @@
 //! CPU information gathering
 
-use crate::{CpuInfo, InventoryError, Result};
+use crate::{InventoryError, Result};
 use serde::{Deserialize, Serialize};
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use uuid::Uuid;
@@ -27,7 +27,7 @@ pub struct CpuInfo {
 pub fn gather_cpu_info() -> Result<CpuInfo> {
     let mut sys =
         System::new_with_specifics(RefreshKind::new().with_cpu(CpuRefreshKind::everything()));
-    sys.refresh_cpu_all();
+    sys.refresh_cpu();
 
     let cpus = sys.cpus();
     let first_cpu = cpus.first();
@@ -42,15 +42,13 @@ pub fn gather_cpu_info() -> Result<CpuInfo> {
         cores: sys.physical_core_count().unwrap_or(0),
         threads: cpus.len(),
         frequency_base: first_cpu.map(|c| c.frequency()).unwrap_or(0),
-        frequency_max: first_cpu.map(|c| c.max_frequency()).unwrap_or(0),
+        frequency_max: 0, // TODO: sysinfo 0.30 has no max frequency; read from WMI/cpuid
         architecture: std::env::consts::ARCH.to_string(),
         cache_l1: 0,
         cache_l2: 0,
         cache_l3: 0,
         temperature: None,
         usage_percent: cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len().max(1) as f32,
-        features: first_cpu
-            .map(|c| c.cpu_features().iter().map(|s| s.to_string()).collect())
-            .unwrap_or_default(),
+        features: Vec::new(), // TODO: sysinfo 0.30 exposes no CPU feature flags; use cpuid
     })
 }

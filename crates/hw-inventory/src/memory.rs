@@ -1,6 +1,6 @@
 //! Memory information gathering
 
-use crate::{InventoryError, MemoryInfo, Result};
+use crate::{InventoryError, Result};
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
 use uuid::Uuid;
@@ -31,22 +31,9 @@ pub struct MemoryModule {
 pub fn gather_memory_info() -> Result<MemoryInfo> {
     let mut sys = System::new_all();
     sys.refresh_memory();
-    sys.refresh_components();
 
-    let modules = sys
-        .memory_modules()
-        .iter()
-        .map(|m| MemoryModule {
-            id: Uuid::new_v4(),
-            size: m.size(),
-            speed: m.speed() as u32,
-            type_: m.memory_type().to_string(),
-            manufacturer: m.manufacturer().to_string(),
-            part_number: m.part_number().to_string(),
-            serial_number: m.serial_number().to_string(),
-            location: m.location().to_string(),
-        })
-        .collect();
+    // TODO: sysinfo exposes no DIMM data; read modules from SMBIOS type 17 / WMI Win32_PhysicalMemory
+    let modules: Vec<MemoryModule> = Vec::new();
 
     Ok(MemoryInfo {
         id: Uuid::new_v4(),

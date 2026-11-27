@@ -1,6 +1,6 @@
 //! PCI device information gathering
 
-use crate::{InventoryError, PciDevice, Result};
+use crate::{InventoryError, Result};
 use pci_ids::{Class as PciClass, Device as PciDeviceId};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

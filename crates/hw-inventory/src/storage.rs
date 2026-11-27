@@ -1,8 +1,8 @@
 //! Storage information gathering
 
-use crate::{InventoryError, Result, SmartData, StorageInfo};
+use crate::{InventoryError, Result};
 use serde::{Deserialize, Serialize};
-use sysinfo::{Disk, DiskKind, System};
+use sysinfo::{Disk, DiskKind, Disks};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,14 +32,12 @@ pub struct SmartData {
 }
 
 pub fn gather_storage_info() -> Result<Vec<StorageInfo>> {
-    let mut sys = System::new_all();
-    sys.refresh_disks();
-    sys.refresh_disks_list();
+    let disks = Disks::new_with_refreshed_list();
 
     let mut storage = Vec::new();
 
-    for disk in sys.disks() {
-        let smart_data = if disk.kind() != DiskKind::Unknown {
+    for disk in disks.list() {
+        let smart_data = if !matches!(disk.kind(), DiskKind::Unknown(_)) {
             gather_smart_data(disk).ok()
         } else {
             None
@@ -52,7 +50,7 @@ pub fn gather_storage_info() -> Result<Vec<StorageInfo>> {
             file_system: disk.file_system().to_string_lossy().to_string(),
             total_space: disk.total_space(),
             available_space: disk.available_space(),
-            used_space: disk.total_space() - disk.available_space(),
+            used_space: disk.total_space().saturating_sub(disk.available_space()),
             is_removable: disk.is_removable(),
             kind: format!("{:?}", disk.kind()),
             smart_data,

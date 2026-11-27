@@ -1,8 +1,8 @@
 //! System information gathering
 
-use crate::{InventoryError, Result, SystemInfo};
+use crate::{InventoryError, Result};
 use serde::{Deserialize, Serialize};
-use sysinfo::{System, SystemExt};
+use sysinfo::System;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,19 +23,19 @@ pub struct SystemInfo {
 }
 
 pub fn gather_system_info() -> Result<SystemInfo> {
-    let mut sys = System::new_all();
-    sys.refresh_system();
+    let mut sys = System::new();
+    sys.refresh_memory();
 
     Ok(SystemInfo {
         id: Uuid::new_v4(),
-        hostname: sys.host_name().unwrap_or_default(),
-        os_name: sys.name().unwrap_or_default(),
-        os_version: sys.os_version().unwrap_or_default(),
-        os_build: sys.long_os_version().unwrap_or_default(),
-        kernel_version: sys.kernel_version().unwrap_or_default(),
+        hostname: System::host_name().unwrap_or_default(),
+        os_name: System::name().unwrap_or_default(),
+        os_version: System::os_version().unwrap_or_default(),
+        os_build: System::long_os_version().unwrap_or_default(),
+        kernel_version: System::kernel_version().unwrap_or_default(),
         architecture: std::env::consts::ARCH.to_string(),
-        uptime: sys.uptime(),
-        boot_time: sys.boot_time(),
+        uptime: System::uptime(),
+        boot_time: System::boot_time(),
         total_memory: sys.total_memory(),
         used_memory: sys.used_memory(),
         total_swap: sys.total_swap(),

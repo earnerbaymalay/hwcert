@@ -1,6 +1,6 @@
 //! GPU information gathering
 
-use crate::{GpuInfo, InventoryError, Result};
+use crate::{InventoryError, Result};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

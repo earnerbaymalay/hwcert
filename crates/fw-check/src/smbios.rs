@@ -1,6 +1,6 @@
 //! SMBIOS information
 
-use crate::{FirmwareError, Result, SmbiosInfo};
+use crate::{FirmwareError, Result};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

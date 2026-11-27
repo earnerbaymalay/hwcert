@@ -1,8 +1,8 @@
 //! USB device information gathering
 
-use crate::{InventoryError, Result, UsbDevice};
+use crate::{InventoryError, Result};
 use serde::{Deserialize, Serialize};
-use usb_ids::{Class, Device};
+use usb_ids::Device;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,7 +70,7 @@ pub fn gather_usb_devices() -> Result<Vec<UsbDevice>> {
 
 fn lookup_usb_name(vid: u16, pid: u16) -> (String, String) {
     if let Some(device) = Device::from_vid_pid(vid, pid) {
-        (device.name.to_string(), device.product_name.to_string())
+        (device.vendor().name().to_string(), device.name().to_string())
     } else {
         (
             format!("Unknown ({:04X})", vid),
