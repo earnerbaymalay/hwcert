@@ -35,7 +35,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"]
 clap = { version = "4", features = ["derive", "env", "cargo", "help"] }
 
 # Hardware
-sysinfo = "0.30"
+sysinfo = "0.40"
 nvml-wrapper = "0.6"
 # smartctl = "0.2"  # Removed - not available on crates.io
 usb-ids = "0.1"
