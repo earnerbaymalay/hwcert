@@ -58,7 +58,7 @@ ollama-client = { git = "https://github.com/earnerbaymalay/palexus-shared", bran
 palexus-brain-schema = { git = "https://github.com/earnerbaymalay/palexus-shared", branch = "master" }
 
 # Cert Gen
-ed25519-dalek = "2"
+ed25519-dalek = "3"
 qrcodegen = "1.8"
 printpdf = "0.6"
 chrono = { version = "0.4", features = ["serde"] }
