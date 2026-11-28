@@ -60,7 +60,7 @@ palexus-brain-schema = { git = "https://github.com/earnerbaymalay/palexus-shared
 # Cert Gen
 ed25519-dalek = "2"
 qrcodegen = "1.8"
-printpdf = "0.6"
+printpdf = "0.12"
 chrono = { version = "0.4", features = ["serde"] }
 
 # Tauri
