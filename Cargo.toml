@@ -46,7 +46,7 @@ usb-ids = "0.1"
 # LLM Bench
 llama-cpp-2 = "0.1"
 tokenizers = { version = "0.19", default-features = false, features = ["onig"] }
-candle-core = "0.8"
+candle-core = "0.11"
 
 # Firmware
 # uefi-rs = "0.2"  # Removed - not available on crates.io
