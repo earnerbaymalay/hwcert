@@ -53,9 +53,9 @@ candle-core = "0.8"
 # nvme = "0.3"  # Removed - not available on crates.io
 # fwupd = "0.1"  # Removed - not available on crates.io
 
-# Shared crates from the ai-cli-work workspace (this repo lives at ai-cli-work/hwcert)
-ollama-client = { path = "../shared/ollama-client" }
-palexus-brain-schema = { path = "../shared/palexus-brain-schema" }
+# Shared crates from palexus-shared repo (published separately for standalone CI)
+ollama-client = { git = "https://github.com/earnerbaymalay/palexus-shared", branch = "master" }
+palexus-brain-schema = { git = "https://github.com/earnerbaymalay/palexus-shared", branch = "master" }
 
 # Cert Gen
 ed25519-dalek = "2"
