@@ -378,9 +378,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let pkcs8 = key_pair.to_pkcs8();
             std::fs::write(&output, pkcs8)?;
+            // Public key (hex) next to it, for `verify -p`.
+            let mut pub_path = output.clone().into_os_string();
+            pub_path.push(".pub");
+            std::fs::write(&pub_path, key_pair.verifying_key_bytes())?;
 
             println!("Key pair generated: {}", output.display());
-            println!("Public key: {}", key_pair.verifying_key_bytes());
+            println!("Public key ({}): {}", PathBuf::from(&pub_path).display(), key_pair.verifying_key_bytes());
         }
 
         Commands::Verify { cert, pubkey } => {
