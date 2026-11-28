@@ -669,7 +669,7 @@ dependencies = [
 name = "cert-gen"
 version = "0.1.0"
 dependencies = [
- "base64 0.22.1",
+ "base64 0.23.1",
  "chrono",
  "ed25519-dalek",
  "getrandom 0.2.17",
