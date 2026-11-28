@@ -14,7 +14,6 @@ usb-ids = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 
@@ -22,3 +21,6 @@ chrono = { workspace = true }
 default = []
 # NVIDIA GPU details via NVML (needs the NVIDIA driver at runtime)
 nvml = ["dep:nvml-wrapper"]
+
+[dev-dependencies]
+tokio = { workspace = true }

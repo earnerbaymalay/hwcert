@@ -112,24 +112,10 @@ mod bench {
         pub threads: Option<usize>,
     }
 
-    fn parse_backend(name: &str) -> Result<Backend, String> {
-        match name {
-            #[cfg(feature = "llama")]
-            "llama.cpp" => Ok(Backend::LlamaCpp),
-            "candle" => Ok(Backend::Candle),
-            #[cfg(feature = "onnx")]
-            "onnx" => Ok(Backend::OnnxRuntime),
-            "llama.cpp" | "onnx" => Err(format!(
-                "Backend '{name}' is not enabled in this build (rebuild with the matching feature)"
-            )),
-            other => Err(format!("Unknown backend '{other}'")),
-        }
-    }
-
     #[tauri::command]
     pub async fn run_benchmark_cmd(config: BenchConfigInput) -> Result<BenchResult, String> {
         let config = BenchConfig {
-            backend: parse_backend(&config.backend)?,
+            backend: Backend::parse(&config.backend).map_err(|e| e.to_string())?,
             model_path: config.model_path,
             prompt: config.prompt,
             max_tokens: config.max_tokens,
@@ -142,6 +128,7 @@ mod bench {
             context_size: 4096,
             gpu_layers: config.gpu_layers,
             threads: config.threads,
+            endpoint: None,
         };
 
         run_benchmark(config).await.map_err(|e| e.to_string())

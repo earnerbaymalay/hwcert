@@ -75,12 +75,13 @@ enum Commands {
 
     /// Run LLM inference benchmark
     Bench {
-        /// Model path
-        #[arg(short, long)]
+        /// Model: Ollama model name, or file path for other backends
+        /// (default: palexus-brain inference.default_model)
+        #[arg(short, long, default_value = "")]
         model: String,
 
-        /// Backend (llama.cpp, candle, onnx)
-        #[arg(short, long, default_value = "llama.cpp")]
+        /// Backend (ollama, candle, llama.cpp, onnx)
+        #[arg(short, long, default_value = "ollama")]
         backend: String,
 
         /// Prompt
@@ -276,18 +277,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             info!("Running LLM benchmark...");
 
-            let backend = match backend.as_str() {
-                #[cfg(feature = "llama")]
-                "llama.cpp" => Backend::LlamaCpp,
-                "candle" => Backend::Candle,
-                #[cfg(feature = "onnx")]
-                "onnx" => Backend::OnnxRuntime,
-                #[cfg(not(feature = "llama"))]
-                "llama.cpp" => return Err("llama.cpp backend not compiled in (build with --features llama)".into()),
-                #[cfg(not(feature = "onnx"))]
-                "onnx" => return Err("onnx backend not compiled in (build with --features onnx)".into()),
-                _ => return Err("Invalid backend".into()),
-            };
+            let backend = Backend::parse(&backend)?;
 
             let config = BenchConfig {
                 model_path: model,
@@ -303,6 +293,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 context_size: 4096,
                 gpu_layers,
                 threads,
+                endpoint: None,
             };
 
             let result = run_benchmark(config).await?;

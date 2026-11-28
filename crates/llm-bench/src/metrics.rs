@@ -16,17 +16,20 @@ impl TokenMetrics {
 }
 
 impl LatencyMetrics {
-    pub fn from_latencies(latencies: &[f64]) -> Self {
+    /// Summary of per-run latencies in milliseconds (nearest-rank percentiles; zeros if empty).
+    pub fn from_latencies_ms(latencies: &[f64]) -> Self {
+        if latencies.is_empty() {
+            return Self { avg_ms: 0.0, p50_ms: 0.0, p90_ms: 0.0, p99_ms: 0.0, max_ms: 0.0 };
+        }
         let mut sorted = latencies.to_vec();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-        let len = sorted.len();
+        sorted.sort_by(|a, b| a.total_cmp(b));
+        let pct = |p: f64| sorted[((p / 100.0 * sorted.len() as f64).ceil() as usize).clamp(1, sorted.len()) - 1];
         Self {
-            avg_ms: latencies.iter().sum::<f64>() / len as f64 * 1000.0,
-            p50_ms: sorted[len / 2] * 1000.0,
-            p90_ms: sorted[len * 9 / 10] * 1000.0,
-            p99_ms: sorted[len * 99 / 100] * 1000.0,
-            max_ms: sorted.last().copied().unwrap_or(0.0) * 1000.0,
+            avg_ms: sorted.iter().sum::<f64>() / sorted.len() as f64,
+            p50_ms: pct(50.0),
+            p90_ms: pct(90.0),
+            p99_ms: pct(99.0),
+            max_ms: sorted[sorted.len() - 1],
         }
     }
 }
@@ -52,5 +55,17 @@ impl GpuUsage {
             power_draw_avg: None,
             power_draw_max: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn latency_percentiles() {
+        let l = LatencyMetrics::from_latencies_ms(&[40.0, 10.0, 30.0, 20.0]);
+        assert_eq!((l.avg_ms, l.p50_ms, l.p90_ms, l.max_ms), (25.0, 20.0, 40.0, 40.0));
+        assert_eq!(LatencyMetrics::from_latencies_ms(&[]).max_ms, 0.0);
     }
 }

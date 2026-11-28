@@ -18,6 +18,8 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 rand = { workspace = true }
+ollama-client = { workspace = true }
+palexus-brain-schema = { workspace = true }
 
 # Optional: ONNX Runtime (requires valid download URL for onnxruntime-sys)
 onnxruntime = { version = "0.0.14", optional = true }

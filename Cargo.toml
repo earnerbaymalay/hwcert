@@ -45,13 +45,17 @@ usb-ids = "0.1"
 
 # LLM Bench
 llama-cpp-2 = "0.1"
-tokenizers = "0.19"
+tokenizers = { version = "0.19", default-features = false, features = ["onig"] }
 candle-core = "0.8"
 
 # Firmware
 # uefi-rs = "0.2"  # Removed - not available on crates.io
 # nvme = "0.3"  # Removed - not available on crates.io
 # fwupd = "0.1"  # Removed - not available on crates.io
+
+# Shared crates from the ai-cli-work workspace (this repo lives at ai-cli-work/hwcert)
+ollama-client = { path = "../shared/ollama-client" }
+palexus-brain-schema = { path = "../shared/palexus-brain-schema" }
 
 # Cert Gen
 ed25519-dalek = "2"

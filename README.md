@@ -1,168 +1,46 @@
-# Project Name
+# HWCert
 
-<div align="center">
+Offline hardware diagnostics for IT techs: inventory a machine, stress it, benchmark a local LLM on it, check firmware, then issue an Ed25519-signed certificate (JSON + QR + PDF) that anyone can verify at [earnerbaymalay.github.io/hwcert-verifier](https://earnerbaymalay.github.io/hwcert-verifier/).
 
-![Nocta](https://img.shields.io/badge/Nocta-Dark_Only-000?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iIzAwMCIvPjx0ZXh0IHg9IjY0IiB5PSI4OCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwic2Fucy1zZXJpZiIgZm9udC1zaXplPSI1NiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk48L3RleHQ+PC9zdmc+)
-![Accent](https://img.shields.io/badge/Accent-%23d4a843-d4a843?style=flat-square)
-![Theme](https://img.shields.io/badge/Theme-Dark_Only-1a1a1a?style=flat-square)
-![Version](https://img.shields.io/badge/Version-0.1.0-000?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-000?style=flat-square)
+## Crates
 
-</div>
+| Crate | What it does | Status |
+|-------|--------------|--------|
+| `hw-inventory` | CPU, memory, storage, system, battery via `sysinfo`; NVIDIA GPUs via NVML (`--features nvml`) | USB/PCI enumeration and SMART data are stubs |
+| `hw-stress` | CPU, memory and disk stress with a thermal log | GPU stress is a placeholder (`--features gpu`); temperature sensors not read yet |
+| `llm-bench` | LLM benchmark: tok/s, TTFT, TPOT, latency percentiles | **Ollama** backend works; candle / llama.cpp / ONNX are stubs |
+| `fw-check` | SMBIOS info + firmware update database lookup | Update DB not published yet; use `--check-db false` offline |
+| `cert-gen` | Ed25519 signing/verification, QR PNG, one-page PDF | Done |
+| `diagbox` | CLI over all of the above | Done |
+| `tauri-app` | Desktop UI over all of the above | Done (basic) |
 
----
-
-## One-liner Description
-
-**Tagline** — What problem does this solve?
-
-<div align="center">
-
-[![GitHub](https://img.shields.io/badge/GitHub-earnerbaymalay-181717?style=flat-square&logo=github)](https://github.com/earnerbaymalay/PROJECT_NAME)
-[![Issues](https://img.shields.io/badge/Issues-Welcome-22c55e?style=flat-square)](https://github.com/earnerbaymalay/PROJECT_NAME/issues)
-[![Discussions](https://img.shields.io/badge/Discussions-Open-d4a843?style=flat-square)](https://github.com/earnerbaymalay/PROJECT_NAME/discussions)
-
-</div>
-
----
-
-## Features
-
-- Feature 1: Description
-- Feature 2: Description
-- Feature 3: Description
-
-## Quick Start
+## Quick start
 
 ```bash
-# Minimal working example
-git clone https://github.com/earnerbaymalay/PROJECT_NAME
-cd PROJECT_NAME
-./build.sh dev
+cargo run -p diagbox -- inventory -o inv.json
+cargo run -p diagbox -- stress --help
+cargo run -p diagbox -- bench --runs 5                     # Ollama, default model from palexus-brain
+cargo run -p diagbox -- bench -m qwen3.5:2b --runs 5 -o bench.json
+cargo run -p diagbox -- firmware --check-db false
+cargo run -p diagbox -- gen-key -o key
+cargo run -p diagbox -- cert -t hardware -i inv.json -k key -o cert.json
+cargo run -p diagbox -- verify -i cert.json -p key.pub
+cargo run -p hwcert-tauri                                  # desktop app
 ```
 
-## Installation
+`bench` needs a running Ollama (`ollama serve`). The endpoint and default model come from the shared **palexus-brain** config (`palexus-brain config show`), e.g. `PALEXUS_BRAIN_INFERENCE__DEFAULT_MODEL=qwen3.5:2b`.
 
-### Prerequisites
+## Build
 
-- **Rust**: 1.75+ ([rustup](https://rustup.rs/))
-- **Node.js**: 20+ ([nvm](https://github.com/nvm-sh/nvm) / [fnm](https://github.com/Schniz/fnm))
-- **Tauri Prerequisites**: See [Tauri docs](https://tauri.app/v1/guides/getting-started/prerequisites)
-
-### Build
+Rust stable. This repo builds inside the `ai-cli-work` workspace: it depends on `../shared/ollama-client` and `../shared/palexus-brain-schema`.
 
 ```bash
-# Linux/macOS/WSL
-./build.sh build
-
-# Windows
-build.cmd build
-```
-
-## Usage
-
-```bash
-# Basic usage
-./build.sh dev          # Development mode
-./build.sh build        # Production build
-./build.sh test         # Run tests
-./build.sh lint         # Lint code
-./build.sh format       # Format code
-```
-
-## Configuration
-
-```toml
-# config.toml
-[app]
-name = "My App"
-version = "0.1.0"
-identifier = "com.example.myapp"
-
-[window]
-title = "My App"
-width = 1200
-height = 800
-
-[security]
-csp = "default-src 'self'; script-src 'self' 'unsafe-inline'"
-devtools = false
-```
-
-## Architecture
-
-```mermaid
-graph TD
-    A[Frontend] --> B[Tauri IPC]
-    B --> C[Rust Core]
-    C --> D[Shared Lib]
-    D --> E[Plugins]
-```
-
-## Tech Stack
-
-`Rust` `TypeScript` `Tauri 2` `Vite` `Ollama` `llama.cpp` `SQLite`
-
-## Project Structure
-
-```
-PROJECT_NAME/
-├── Cargo.toml              # Workspace root
-├── tauri.conf.json         # Tauri configuration
-├── build.sh / build.cmd    # Build scripts
-├── .github/workflows/      # CI/CD
-├── crates/
-│   ├── app/                # Tauri entry point
-│   ├── core/               # Business logic
-│   ├── cli/                # CLI binary
-│   └── shared/             # Shared utilities
-├── frontend/               # TypeScript + Vite
-└── docs/                   # Documentation
-```
-
-## Development
-
-```bash
-# Install dependencies
-cd frontend && npm install
-
-# Development
-./build.sh dev
-
-# Code quality
-./build.sh lint
-./build.sh format
-./build.sh test
-```
-
-## Testing
-
-```bash
-# Rust tests
+cargo build --workspace
 cargo test --workspace
-
-# Frontend tests
-cd frontend && npm test
 ```
 
-## CI/CD
-
-| Workflow | Status |
-|----------|--------|
-| CI | ![CI](https://github.com/earnerbaymalay/PROJECT_NAME/workflows/CI/badge.svg) |
-| Release | ![Release](https://github.com/earnerbaymalay/PROJECT_NAME/workflows/Release/badge.svg) |
-| Pages | ![Pages](https://github.com/earnerbaymalay/PROJECT_NAME/workflows/Deploy%20Pages/badge.svg) |
+Optional features: `nvml` (hw-inventory), `gpu` (hw-stress), `llama` / `onnx` (llm-bench, diagbox, tauri-app; need extra native toolchains).
 
 ## License
 
 MIT OR Apache-2.0
-
----
-
-<div align="center">
-
-**Built with Nocta aesthetic** · Fonts: Geist / Geist Mono · Accent: `#d4a843` · Dark-only, always
-
-Deployed via GitHub Pages from [`earnerbaymalay/PROJECT_NAME`](https://github.com/earnerbaymalay/PROJECT_NAME)
-
-</div>

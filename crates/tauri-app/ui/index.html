@@ -28,9 +28,10 @@
 
     <section aria-labelledby="h-bench">
       <h2 id="h-bench">LLM benchmark</h2>
-      <label>Model path <input id="bench-model" type="text" placeholder="C:\models\model.gguf" /></label>
+      <label>Model <input id="bench-model" type="text" placeholder="e.g. qwen2.5-coder:1.5b (blank = default)" /></label>
       <label>Backend
         <select id="bench-backend">
+          <option value="ollama" selected>ollama</option>
           <option value="candle">candle</option>
           <option value="llama.cpp">llama.cpp</option>
           <option value="onnx">onnx</option>

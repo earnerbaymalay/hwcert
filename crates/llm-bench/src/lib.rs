@@ -1,5 +1,6 @@
-//! LLM inference benchmarking crate
-//! Provides benchmarking for llama.cpp, candle, and ONNX Runtime
+//! LLM inference benchmarking crate.
+//! Ollama backend (default, via the shared `ollama-client`) is implemented;
+//! llama.cpp, candle and ONNX Runtime backends are still stubs.
 
 #[cfg(feature = "llama")]
 pub mod llama_cpp;
@@ -7,6 +8,7 @@ pub mod llama_cpp;
 pub mod onnx;
 pub mod candle;
 pub mod metrics;
+pub mod ollama;
 pub mod runner;
 pub mod tokenizer;
 
@@ -19,6 +21,7 @@ use uuid::Uuid;
 /// Benchmark configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchConfig {
+    /// Model file path, or for Ollama the model name (empty = palexus-brain default).
     pub model_path: String,
     pub backend: Backend,
     pub prompt: String,
@@ -32,15 +35,39 @@ pub struct BenchConfig {
     pub context_size: usize,
     pub gpu_layers: Option<usize>,
     pub threads: Option<usize>,
+    /// Backend server URL (Ollama); None = palexus-brain config.
+    #[serde(default)]
+    pub endpoint: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Backend {
+    /// Local Ollama server (always available).
+    Ollama,
     #[cfg(feature = "llama")]
     LlamaCpp,
     Candle,
     #[cfg(feature = "onnx")]
     OnnxRuntime,
+}
+
+impl Backend {
+    /// Parse a CLI/UI backend name: `ollama`, `candle`, `llama.cpp`, `onnx`.
+    pub fn parse(name: &str) -> Result<Self> {
+        match name {
+            "ollama" => Ok(Backend::Ollama),
+            "candle" => Ok(Backend::Candle),
+            #[cfg(feature = "llama")]
+            "llama.cpp" => Ok(Backend::LlamaCpp),
+            #[cfg(feature = "onnx")]
+            "onnx" => Ok(Backend::OnnxRuntime),
+            "llama.cpp" | "onnx" => Err(BenchError::Config(format!(
+                "backend '{name}' is not compiled in (rebuild with --features {})",
+                if name == "onnx" { "onnx" } else { "llama" }
+            ))),
+            other => Err(BenchError::Config(format!("unknown backend '{other}' (ollama, candle, llama.cpp, onnx)"))),
+        }
+    }
 }
 
 #[cfg(not(feature = "llama"))]
@@ -156,6 +183,7 @@ mod tests {
         let config = BenchConfig {
             model_path: "model.gguf".to_string(),
             backend: Backend::Candle,
+            endpoint: None,
             prompt: "Hello".to_string(),
             max_tokens: 100,
             temperature: 0.7,
@@ -169,5 +197,13 @@ mod tests {
             threads: Some(8),
         };
         assert_eq!(config.max_tokens, 100);
+    }
+
+    #[test]
+    fn backend_parse() {
+        assert!(matches!(Backend::parse("ollama").unwrap(), Backend::Ollama));
+        assert!(Backend::parse("nope").is_err());
+        #[cfg(not(feature = "llama"))]
+        assert!(Backend::parse("llama.cpp").unwrap_err().to_string().contains("--features llama"));
     }
 }

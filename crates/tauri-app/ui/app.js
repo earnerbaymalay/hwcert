@@ -66,7 +66,6 @@ $("btn-bench").addEventListener("click", (e) => {
     gpu_layers: null,
     threads: null,
   };
-  if (!config.model_path) return show("Enter a model path first.");
   run(e.target, "Benchmark", () => invoke("run_benchmark_cmd", { config }));
 });
 
